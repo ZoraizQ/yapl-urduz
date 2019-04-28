@@ -2,3 +2,9 @@ banao a = 5;
 a = 3;
 banao b = 4;
 dekhao(a+b);
+
+agar (3 == 3) phir 
+{ 
+dekhao("lol"); 
+dekhao("xd"); 
+};

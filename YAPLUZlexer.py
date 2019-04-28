@@ -85,7 +85,7 @@ t_INC = r'\+\+'
 t_DEC = r'\-\-'
 t_COMMA = r'\,'
 t_SEMICOL = r'\;'
-t_ignore = r' \t\v\n\r' # ignore spaces, better lexing performance, special case
+t_ignore = r' \t\v\r' # ignore spaces, better lexing performance, special case
 # allow \' character here for urdu?
 # any number of characters, upper or lower case any position, atleast 1 length
 #first character must be alphabet or _, rest can be alphanumeric or have _, adding no character means concatenation

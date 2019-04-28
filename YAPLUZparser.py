@@ -40,16 +40,21 @@ start = 'uz'
 # after the lexing, start parsing
 def p_uz(p): # non-terminal, starting
     """
-    uz : stmt uz
+    uz : line uz
     """
     p[0] = [p[1]] + p[2] # list comprehension used to solve recursive grammar, added/appending as well
 
-def p_uz_stmt(p): # non-terminal, starting
+def p_line_stmt(p): # non-terminal, starting
     """
-    uz : stmt SEMICOL
+    line : stmt SEMICOL
     """
     p[0] = ('Stmt',p[1])
-
+    '''
+    try:
+        run(p[0])
+    except Exception as e:
+        print(e)
+    '''
 def p_uz_stmt_error(p):
     """uz : error SEMICOL
     """
@@ -60,25 +65,6 @@ def p_uz_empty(p):
     uz :
     """
     p[0] = []
-
-def p_stmt(p):
-    """ 
-    stmt : exp
-         | makevar
-         | assignment
-         | if
-         | for
-         | print
-         | incdec
-         | return
-    """
-    p[0] = p[1]
-
-def p_stmt_error(p):
-    """
-    stmt : error
-    """
-    print("Syntax error in statement selection. Bad statement")
     
 def p_stmt_block(p): 
     """ stmtblock : LBRACE stmtS RBRACE"""
@@ -188,8 +174,8 @@ def p_exp_leftincdec(p):
 
 def p_stmt_rightincdec(p):
     """
-    incdec : exp DEC
-           | exp INC
+    stmt : exp DEC
+         | exp INC
     """
     if p[2] == '--':
         p[0] = ('DecR', p[1])
@@ -223,20 +209,23 @@ def p_exp_group(p):
 # banao a, or banao a = 3 (initialization and creation of variables)
 def p_makevar(p):
     """
-    makevar : MAKE NAME
-            | MAKE assignment
+    stmt : MAKE NAME
     """
-    p[0] = ('Made', p[2])
+    p[0] = ('Made', p[2]) 
 
+def p_initvar(p):
+    """
+    stmt : MAKE NAME EQUAL exp
+    """
+    p[0] = ('Made', ('=',p[2],p[4])) 
 
 def p_assignment(p):
-    """assignment : NAME EQUAL exp"""
+    """stmt : NAME EQUAL exp"""
     p[0] = ('=',p[1],p[3])
-
 
 def p_if(p):
     """
-    if : IF exp THEN stmtblock
+    stmt : IF exp THEN stmtblock
     """
     p[0] = ('If', p[2], p[4])
     '''
@@ -266,31 +255,22 @@ def p_stmt_empty(p):
 # challo banao i = 1 se 3 tak
 def p_stmt_for(p):
     """
-    for  : FOR assignment TO INT UNTIL
-         | FOR makevar TO INT UNTIL
+    stmt : FOR NAME EQUAL exp TO INT UNTIL
     """
+    p[2] = ('=',p[2],p[4])
     p[0] = ('For', p[2], p[4])
 
 def p_stmt_print(p):
-    """print : PRINT LPAREN exp RPAREN"""
-    try:    
-        result = run(p[3]) # expression given
-        if result: # not None
-            if result == True:
-                result = 'sach'
-            elif result == False:
-                result = 'ghalat'
-            print(result)
-
-    except Exception as e:
-        print(e)
-
+    """stmt : PRINT LPAREN exp RPAREN"""
+    p[0] = ('Print', p[3])
+   
 def p_stmt_return(p):
-    """return : RETURN exp"""
+    """stmt : RETURN exp"""
     p[0] = ('Return', p[2])
 
 def p_error(p):
     print("Syntax error.")
+    quit()
     return
 
 parser = yacc.yacc() # start parsing, yacc object created
@@ -330,6 +310,7 @@ def eeb(e): #evaluate expression binary
 
     
 def eec(e): # evaluate expression comparison
+    #print(f"CT in eec: {e}")
     operator = e[1]
     if e[0] == 'Group':
         return eec(e[1])
@@ -368,18 +349,23 @@ def eec(e): # evaluate expression comparison
 
     return boolres
 
-def run(p): # p is the parsed tree
-    print(f"Current tree: {p}")
-    global var_dict 
+def run(p): # p is the parsed tree / program
+    #print(f"CT: {p}")
+    if p[0] == 'Program':
+        proglist = p[1]  
+        for i in range(len(proglist)):
+            if proglist[i] != None:
+                run(proglist[i])
 
     stype = p[0] # node type of parse tree
     if stype == 'Stmt':
         if p[1] != None and p[1] != []:
             return run(p[1])
     elif stype == 'Block': # run all statements in block of statement
-        stmts = p[1]
-        for i in range(len(stmts)):
-            run(stmts[i])
+        slist = p[1]
+        for i in range(len(slist)):
+            if slist[i] != None:
+                run(slist[i])
     elif stype == 'Name':
         if not p[1] in var_dict:
             raise NameError(f"Error: No such variable \'{p[1]}\' exists.")
@@ -410,15 +396,20 @@ def run(p): # p is the parsed tree
             var_dict[p[1][1]] = run(p[1][2]) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
         else:
             # only creation, default value None assigned
-            if p[1] in var_dict:
+            varname = p[1]
+            if varname in var_dict:
                 raise KeyError(f"Error: A variable by that name already exists.")
-            var_dict[p[1]] = None
+            var_dict[varname]= None
     elif stype == 'If':    
         condition = p[1]
         then_stmts = p[2]
-        quit()
-        if eec(condition) == True:
+        #print(f"Condition: {condition} Then {then_stmts}")
+        if eec(condition):
+            #print("Running then statements in if")
             run(then_stmts)
+        else:
+            run(p[1])
+
     elif stype == 'IfElse':    
         condition = p[1]
         then_stmts = p[2]
@@ -427,19 +418,40 @@ def run(p): # p is the parsed tree
             run(then_stmts)
         else:
             run(else_stmts)
-
     elif stype == 'For':
         pass
     elif stype == 'While':
         pass
-
-    else:
-        if p[1] in var_dict:
-            return var_dict[p[1]]
+    elif stype == 'Print':
+        result = run(p[1])
+        if result: # not None
+            if result == True:
+                result = 'sach'
+            elif result == False:
+                result = 'ghalat'
+            print(result)
     
-    return p[1]
-
+    else:
+        if p[0] == 'Program':
+            return p[1]
+        elif p[1] in var_dict:
+            return var_dict[p[1]]
+        else:    
+            return p[1]
+    
     #print("Variables:",var_dict)
+
+
+while True:
+    break
+    userin = input("{YAPL_UZ} ")
+    uzparsed = parser.parse(userin)
+    if not uzparsed:
+        continue
+    try:   
+        result = run(('Program',uzparsed))
+    except Exception as e:
+        print(e)
 
 while True:
     #refresh state
@@ -449,26 +461,20 @@ while True:
     fileHandler.close()
     #print(userinlist)
 
-    #print('\x1bc',end="")
+    print('\x1bc',end="")
     print("{YAPL_UZ}")
     uzparsed = parser.parse(userin)
     if not uzparsed:
         continue
-
+    
     print(userin)
+    print("=========================================\n{OUTPUT}")
     try:
-        run(uzparsed)
+        run(('Program',uzparsed))
     except Exception as e:
         print(e)
-
+    
     input("Press any key to run another code.")
 
-'''
-while True:
-    userin = input("{YAPL_UZ} ")
-    uzparsed = parser.parse(userin)
-    if not uzparsed:
-        continue
-'''
 
 exit()
