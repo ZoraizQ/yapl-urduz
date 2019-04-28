@@ -1,10 +1,24 @@
 banao a = 5;
 a = 3;
-banao b = 4;
-dekhao(a+b);
-
-agar (3 == 3) phir 
+banao b = 3.99f;
+dekhao(a+b); ~single line comment
+dekhao(b);
+~~~banao mychar = 'c';dekhao(mychar);~~~
+agar b == 4 phir 
 { 
-dekhao("lol"); 
-dekhao("xd"); 
+dekhao("IF");
+}
+lekinagar (4==5) == sach phir
+{
+dekhao("ELIF1");
+}
+lekinagar 5==5 phir
+{
+dekhao("ELIF2");
+agar (3 == 3) phir{
+dekhao("NESTEDIFinELIF2");	
+}; 
+}
+warna phir{
+dekhao("ELSE");
 };

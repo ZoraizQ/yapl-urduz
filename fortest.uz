@@ -1,0 +1,5 @@
+banao i;
+challo i = 5 se 1 tak -2
+{ 
+dekhao(i); 
+}; 

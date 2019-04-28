@@ -6,19 +6,17 @@ import re
 #Reserved keywords for YAPL_UZ
 reserved = { # single rule, special
     'agar' : 'IF',
+    'lekinagar' : 'ELIF',
     'warna' : 'ELSE',
     'phir':'THEN',
-    'warnaagar' : 'ELIF',
     'challo':'FOR',
     'bhejo' : 'RETURN',
     'dekhao' : 'PRINT',
     'jabtak' : 'WHILE',
     'karo' : 'DO',
-    'se' : 'TO', # for loop in range
+    'se':'TO', # for loop in range
     'tak' : 'UNTIL',
     'banao' : 'MAKE',
-    'mayhar':'EACH', # for each loop
-    'kayliye':'IN',
     'kaam':'FUNCTION',
     'aur':'AND', # can be caps too
     'ya':'OR',
@@ -41,13 +39,14 @@ tokens = [
     'EQUAL',
     'NAME',
     'COMMENT',
+    'MULTICOMMENT',
     'LPAREN',
     'RPAREN',
     'LBRACE',
     'RBRACE',
     'LBRACK',
     'RBRACK',
-    'SEP',
+    #'SEP',
     'SEMICOL',
     'COMMA',
     'LT',
@@ -57,6 +56,7 @@ tokens = [
     'NE',
     'EE',
     'STRING',
+    'CHAR',
     'INC',
     'DEC'
 ] + list(reserved.values())
@@ -74,7 +74,7 @@ t_LBRACE = r'\{'
 t_RBRACE = r'\}'
 t_LBRACK = r'\['
 t_RBRACK = r'\]'
-t_SEP = r'\|'
+#t_SEP = r'\|'
 t_LT = r'\<'
 t_GT = r'\>'
 t_LTE = r'\<\='
@@ -85,7 +85,7 @@ t_INC = r'\+\+'
 t_DEC = r'\-\-'
 t_COMMA = r'\,'
 t_SEMICOL = r'\;'
-t_ignore = r' \t\v\r' # ignore spaces, better lexing performance, special case
+t_ignore = r' ' # ignore spaces, better lexing performance, special case
 # allow \' character here for urdu?
 # any number of characters, upper or lower case any position, atleast 1 length
 #first character must be alphabet or _, rest can be alphanumeric or have _, adding no character means concatenation
@@ -95,6 +95,10 @@ def t_COMMENT(t):
  r'\~.*' # . represents any character
  pass
  # discarding tokens, since nothing is returned
+
+def t_MULTICOMMENT(t): # needs fix
+ r'\~\~\~.*\~\~\~' # . represents any character
+ pass
 
 # Define a rule so we can track line numbers
 def t_newline(t):
@@ -120,6 +124,11 @@ def t_STRING(t):
     t.value = t.value[1:-1] # truncate "" marks
     return t
 
+def t_CHAR(t):
+    r'\'[^"]\''
+    t.value = t.value[1:-1] # truncate '' marks
+    return t
+
 # variable or function names
 def t_NAME(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
@@ -139,15 +148,16 @@ def t_INT(t): # parameter t is the token
     return t
 
 def t_error(t): # error while lexing
-    print(f"Lexer Error 0: Illegal character entered = {t.value[0]}.")
+    print(f"Lexer Error 0: Illegal character entered = {t.value[0]}")
     t.lexer.skip(1) # skips illegal character
 
 
 # lexer build
 uzlexer = lex.lex()
 
-'''
+
 while True:
+    break
     try:
         print("YAPL_UZ>>",end='')
         uzlexer.input(input()) # reset lexer, store new input
@@ -160,4 +170,3 @@ while True:
     except:
         print("Unexpected error.")
         break
-'''

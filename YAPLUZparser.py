@@ -80,11 +80,22 @@ def p_new_scope(p):
     push_scope(s)
     ...
 '''
+
+def p_stmt_block_error(p):
+    """ stmtblock : LBRACE error RBRACE"""
+    p[0] = "BAD STMTS IN BLOCK"
+
 def p_stmtS(p):
     """
     stmtS : stmt SEMICOL stmtS
     """
     p[0] = [p[1]]+p[3]
+
+def p_stmtS_error(p):
+    """
+    stmtS : error SEMICOL stmtS
+    """
+    p[0] = "BAD STMT IN STMTS"
 
 def p_stmtS_empty(p):
     """
@@ -140,10 +151,7 @@ def p_exp_compare(p):
         | exp EE exp
         | exp NE exp
     """
-    if len(p) == 2:
-        p[0] = ('Bool', p[1])
-    else:
-        p[0] = ('CompareEXP', p[2], p[1], p[3])
+    p[0] = ('CompareEXP', p[2], p[1], p[3])
     
 # needs work
 def p_exp_name(p):
@@ -183,9 +191,7 @@ def p_stmt_rightincdec(p):
         p[0] = ('IncR', p[1 ])
     
 def p_exp_not(p):
-    """
-    exp : NOT exp
-    """
+    """exp : NOT exp"""
     p[0] = ('Not', p[2])
 
 def p_exp_boolean(p):
@@ -202,21 +208,21 @@ def p_exp_string(p):
     """exp : STRING"""
     p[0] = ('Str', p[1])
 
+def p_exp_char(p):
+    """exp : CHAR"""
+    p[0] = ('Char', p[1])
+
 def p_exp_group(p):
     """exp : LPAREN exp RPAREN"""
     p[0] = ('Group', p[2])
 
 # banao a, or banao a = 3 (initialization and creation of variables)
 def p_makevar(p):
-    """
-    stmt : MAKE NAME
-    """
+    """stmt : MAKE NAME"""
     p[0] = ('Made', p[2]) 
 
 def p_initvar(p):
-    """
-    stmt : MAKE NAME EQUAL exp
-    """
+    """stmt : MAKE NAME EQUAL exp"""
     p[0] = ('Made', ('=',p[2],p[4])) 
 
 def p_assignment(p):
@@ -226,40 +232,57 @@ def p_assignment(p):
 def p_if(p):
     """
     stmt : IF exp THEN stmtblock
+         | IF exp THEN stmtblock elsif ELSE THEN stmtblock
     """
-    p[0] = ('If', p[2], p[4])
-    '''
-    | IF exp THEN stmtblock ELSE THEN stmtblock
-    | IF exp THEN stmtblock elif ELSE THEN stmtblock
     len_p = len(p)
     if len_p == 5:
         p[0] = ('If', p[2],p[4])
-    elif len_p == 8:
-        p[0] = ('IfElse', p[2],p[4],p[7])
     else:
-        p[0] = ('IfElifElse', p[2],p[4],p[5],p[8])
-    '''
-def p_elif(p):
+        if p[5] == []:
+            p[0] = ('IfElse', p[2],p[4],p[8])
+        else:
+            p[0] = ('IfElifElse', p[2],p[4],p[5],p[len_p-1])
+
+def p_elsif(p):
     """
-    elif : ELIF exp THEN stmtblock elif
+    elsif : ELIF exp THEN stmtblock elsif
     """
-    p[0] = (p[2],p[4])
+    p[0] = [(p[2],p[4])] + p[5]
     
-def p_stmt_empty(p):
+def p_elsif_empty(p):
     """
-    elif :
+    elsif :
     """
     p[0] = []
 
-# challo i = 1 se 3 tak
-# challo banao i = 1 se 3 tak
-def p_stmt_for(p):
-    """
-    stmt : FOR NAME EQUAL exp TO INT UNTIL
-    """
-    p[2] = ('=',p[2],p[4])
-    p[0] = ('For', p[2], p[4])
 
+# karo {dekhao(x); x++;} jabtak (x != 4);
+def p_stmt_while(p):
+    """
+    stmt : DO stmtblock WHILE exp
+    """
+    p[0] = ('DoWhile', p[2], p[4])
+
+'''
+banao i;
+challo i = 5 se 1 tak -2
+{
+dekhao(i);
+};
+'''
+def p_stmt_for(p):
+    """stmt : FOR NAME EQUAL exp TO exp UNTIL step stmtblock"""
+    p[0] = ('For', p[2], p[4], p[6], p[9], p[8])
+
+def p_step(p):
+    """step : exp"""
+    p[0] = p[1]
+
+def p_step_empty(p):
+    """step : """
+    p[0] = []
+
+# allow more parameters
 def p_stmt_print(p):
     """stmt : PRINT LPAREN exp RPAREN"""
     p[0] = ('Print', p[3])
@@ -344,6 +367,10 @@ def eec(e): # evaluate expression comparison
         elif type(paramR) == str or type(paramR) == int or type(paramR) == float:
             raise TypeError("Error: Type not supported with this operation.")
         boolres = paramL or paramR
+    elif e[0] == 'Name':
+        if not e[1] in var_dict:
+            raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
+        return var_dict[e[1]]
     else:
         boolres = e[1]
 
@@ -407,30 +434,72 @@ def run(p): # p is the parsed tree / program
         if eec(condition):
             #print("Running then statements in if")
             run(then_stmts)
-        else:
-            run(p[1])
-
     elif stype == 'IfElse':    
         condition = p[1]
         then_stmts = p[2]
         else_stmts = p[3]
-        if eec(condition) == True:
+        if eec(condition):
             run(then_stmts)
         else:
             run(else_stmts)
+    elif stype == 'IfElifElse':
+        condition = p[1]
+        then_stmts = p[2]
+        elif_stmts = p[3]
+        else_stmts = p[4]
+        if eec(condition):
+            run(then_stmts)
+        else:
+            esTrue = False
+            es_then = None
+            for es in elif_stmts:
+                es_condition = es[0]
+                es_then = es[1]
+                if eec(es_condition):
+                    esTrue = True
+                    break
+            if esTrue and es_then != None:
+                run(es_then)
+            else:
+                run(else_stmts)
     elif stype == 'For':
-        pass
-    elif stype == 'While':
-        pass
+        countervar = p[1]
+        if not countervar in var_dict:
+            raise NameError(f"Error: No such variable \'{p[1]}\' exists.") 
+        start = eeb(p[2]) # must be numerical expression
+        end = eeb(p[3]) # evaluating numerical expressions
+        do_stmts = p[4]
+        step = p[5]
+        if start > end:
+            end -= 2
+        if step == []:
+            if start > end:
+                step = -1
+            else:
+                step = 1
+        else:
+            step = p[5][1]
+        if start > end and step > 0:
+            raise RuntimeError("Error: Wrong step given.")
+        
+        for i in range(start, end+1, step):
+            var_dict[countervar] = i
+            run(do_stmts)
+
+    elif stype == 'DoWhile':
+        do_stmts = p[1]
+        condition = p[2]
+        run(do_stmts) # first time the block is just executed
+        while eec(condition): # condition is necessary then onwards
+            run(do_stmts)
     elif stype == 'Print':
         result = run(p[1])
-        if result: # not None
+        if type(result) == bool:
             if result == True:
                 result = 'sach'
             elif result == False:
                 result = 'ghalat'
-            print(result)
-    
+        print(result)    
     else:
         if p[0] == 'Program':
             return p[1]
@@ -456,12 +525,12 @@ while True:
 while True:
     #refresh state
     var_dict.clear()
-    fileHandler = open("test.uz","r")
+    fileHandler = open(sys.argv[1],"r")
     userin = fileHandler.read()
     fileHandler.close()
     #print(userinlist)
 
-    print('\x1bc',end="")
+    #print('\x1bc',end="")
     print("{YAPL_UZ}")
     uzparsed = parser.parse(userin)
     if not uzparsed:
@@ -474,7 +543,7 @@ while True:
     except Exception as e:
         print(e)
     
-    input("Press any key to run another code.")
+    input("Press any key to run code again.")
 
 
 exit()
