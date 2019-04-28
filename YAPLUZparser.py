@@ -36,6 +36,7 @@ precedence = (
 
 
 start = 'uz'
+# multiple variables, assigning data from one variable to another
 
 # after the lexing, start parsing
 def p_uz(p): # non-terminal, starting
@@ -43,12 +44,13 @@ def p_uz(p): # non-terminal, starting
     uz : line uz
     """
     p[0] = [p[1]] + p[2] # list comprehension used to solve recursive grammar, added/appending as well
-
+    
 def p_line_stmt(p): # non-terminal, starting
     """
     line : stmt SEMICOL
     """
     p[0] = ('Stmt',p[1])
+    #print(p.lineno(2))
     '''
     try:
         run(p[0])
@@ -69,7 +71,6 @@ def p_uz_empty(p):
 def p_stmt_block(p): 
     """ stmtblock : LBRACE stmtS RBRACE"""
     p[0] = ('Block', p[2])
-
     ''' stmtblock : LBRACE new_scope stmtS RBRACE
     pop_scope()        # Return to previous scope'''
 '''
@@ -110,8 +111,8 @@ def p_stmtS_empty(p):
 #p.lexpos(num). Return the lexing position for symbol num 
 
 def p_exp_call(p):
-    """exp : NAME LPAREN optargs RPAREN"""
-    p[0] = ("Call",p[1],p[3])
+    """exp : CALL NAME LPAREN optargs RPAREN"""
+    p[0] = ("Call",p[2],p[4]) # optsargs may be empty (p[2])
 
 def p_optargs(p):
     """optargs : args"""
@@ -157,6 +158,26 @@ def p_exp_compare(p):
 def p_exp_name(p):
     """exp : NAME"""
     p[0] = ('Name', p[1])
+
+def p_list(p):
+    """list : LBRACK optargs RBRACK"""
+    p[0] = p[2]
+
+def p_stmt_listpop(p):
+    """stmt : NAME DOT POP LPAREN exp RPAREN"""
+    p[0] = ('ListF', 'Pop', p[1], p[5])
+
+def p_stmt_listpush(p):
+    """stmt : NAME DOT PUSH LPAREN exp RPAREN"""
+    p[0] = ('ListF', 'Push', p[1], p[5])
+
+def p_stmt_listindex(p):
+    """stmt : NAME DOT INDEX LPAREN exp RPAREN"""
+    p[0] = ('ListF', 'Index', p[1], p[5])
+
+def p_stmt_listslice(p):
+    """stmt : NAME DOT SLICE LPAREN exp COMMA exp RPAREN"""
+    p[0] = ('ListF', 'Slice', p[1], p[5], p[7])
 
 def p_exp_num(p): # handles unary minus, minusminus, plusplus
     """
@@ -222,7 +243,8 @@ def p_makevar(p):
     p[0] = ('Made', p[2]) 
 
 def p_initvar(p):
-    """stmt : MAKE NAME EQUAL exp"""
+    """stmt : MAKE NAME EQUAL exp
+            | MAKE NAME EQUAL list"""
     p[0] = ('Made', ('=',p[2],p[4])) 
 
 def p_assignment(p):
@@ -416,11 +438,19 @@ def run(p): # p is the parsed tree / program
             raise NameError(f"Error: No such variable \'{p[1]}\' exists.")
         var_dict[p[1]] = run(p[2]) # make an entry for the variable in the var_dict dictionary, where the key is the NAME and the value is the assigned expression
     elif stype == 'Made': # creation of a variable
-        if type(p[1]) == tuple: # assignment tuple possible
+        if type(p[1]) == tuple or type(p[1]) == list: # assignment tuple possible
             # initialization with creation
-            if p[1][1] in var_dict:
+            varname = p[1][1]
+            if varname in var_dict:
                 raise KeyError(f"Error: A variable by that name already exists.")
-            var_dict[p[1][1]] = run(p[1][2]) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
+            value = p[1][2]
+            if type(value) == list:
+                varlist = []
+                for element in value:
+                    varlist.append(element[1]) # assuming not list inside, only single var
+                var_dict[varname] = varlist
+            else:    
+                var_dict[varname] = run(value) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
         else:
             # only creation, default value None assigned
             varname = p[1]
@@ -486,7 +516,7 @@ def run(p): # p is the parsed tree / program
         for i in range(start, end+1, step):
             var_dict[countervar] = i
             run(do_stmts)
-            
+
         var_dict[countervar] = old_counterval
 
     elif stype == 'DoWhile':
@@ -502,8 +532,27 @@ def run(p): # p is the parsed tree / program
                 result = 'sach'
             elif result == False:
                 result = 'ghalat'
-        print(result)    
-    else:
+        print(result)  
+    elif stype == 'ListF':
+        listvar = p[2]
+        if listvar in var_dict and type(var_dict[listvar]) == list:
+            ftype = p[1]
+            e1 = eeb(p[3]) # evaluate expression, error handling
+            vlist = var_dict[listvar]
+            if ftype == 'Pop':
+                if e1 == 0: # remove head of list
+                    del var_dict[listvar][0]
+                elif e1 == 1: # remove tail of list
+                    var_dict[listvar].pop()
+            elif ftype == 'Push': #append
+                var_dict[listvar].append(e1)
+            elif ftype == 'Index':
+                print(vlist[e1])
+            elif ftype == 'Slice':
+                e2 = eeb(p[4])
+                var_dict[listvar] = vlist[e1:e2+1]
+
+    else:       
         if p[0] == 'Program':
             return p[1]
         elif p[1] in var_dict:

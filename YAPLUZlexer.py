@@ -23,7 +23,11 @@ reserved = { # single rule, special
     'na':'NOT',
     'bullao':'CALL',
     'sach':'TRUE',
-    'ghalat':'FALSE'
+    'ghalat':'FALSE',
+    'pop':'POP',
+    'push':'PUSH',
+    'index':'INDEX',
+    'slice':'SLICE'
 }
 
 # list of all possible tokens, the name 'tokens' is necessary
@@ -47,6 +51,7 @@ tokens = [
     'LBRACK',
     'RBRACK',
     #'SEP',
+    'NEWL',
     'SEMICOL',
     'COMMA',
     'LT',
@@ -58,7 +63,8 @@ tokens = [
     'STRING',
     'CHAR',
     'INC',
-    'DEC'
+    'DEC',
+    'DOT'
 ] + list(reserved.values())
 
 t_PLUS = r'\+' # recognise regular expression symbol
@@ -85,6 +91,7 @@ t_INC = r'\+\+'
 t_DEC = r'\-\-'
 t_COMMA = r'\,'
 t_SEMICOL = r'\;'
+t_DOT = r'\.'
 t_ignore = r' ' # ignore spaces, better lexing performance, special case
 # allow \' character here for urdu?
 # any number of characters, upper or lower case any position, atleast 1 length
@@ -101,7 +108,7 @@ def t_MULTICOMMENT(t): # needs fix
  pass
 
 # Define a rule so we can track line numbers
-def t_newline(t):
+def t_NEWL(t):
  r'\n+'
  t.lexer.lineno += len(t.value) # number of \n characters lexed (length) in a line increments the lineno attribute of the t.lexer
 # positional info recorded in lexpos attribute, we can get column info from this

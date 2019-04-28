@@ -1,0 +1,12 @@
+banao a = [3, 4, 5];
+dekhao(a);
+a.index(1);
+a.pop(0);
+dekhao(a);
+a.pop(1);
+dekhao(a);
+a.push(2);
+a.push(9);
+dekhao(a);
+a.slice(0,1);
+dekhao(a);
