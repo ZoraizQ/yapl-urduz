@@ -482,9 +482,12 @@ def run(p): # p is the parsed tree / program
         if start > end and step > 0:
             raise RuntimeError("Error: Wrong step given.")
         
+        old_counterval = var_dict[countervar]
         for i in range(start, end+1, step):
             var_dict[countervar] = i
             run(do_stmts)
+            
+        var_dict[countervar] = old_counterval
 
     elif stype == 'DoWhile':
         do_stmts = p[1]
