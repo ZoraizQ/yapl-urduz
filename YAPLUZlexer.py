@@ -27,7 +27,8 @@ reserved = { # single rule, special
     'pop':'POP',
     'push':'PUSH',
     'index':'INDEX',
-    'slice':'SLICE'
+    'slice':'SLICE',
+    'daba':'STRUCT'
 }
 
 # list of all possible tokens, the name 'tokens' is necessary
@@ -50,7 +51,7 @@ tokens = [
     'RBRACE',
     'LBRACK',
     'RBRACK',
-    #'SEP',
+    'SEP',
     'NEWL',
     'SEMICOL',
     'COMMA',
@@ -80,7 +81,7 @@ t_LBRACE = r'\{'
 t_RBRACE = r'\}'
 t_LBRACK = r'\['
 t_RBRACK = r'\]'
-#t_SEP = r'\|'
+t_SEP = r'\|'
 t_LT = r'\<'
 t_GT = r'\>'
 t_LTE = r'\<\='

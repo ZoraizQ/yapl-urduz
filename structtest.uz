@@ -1,0 +1,5 @@
+~daba Node|a=1, c=2|;
+
+banao Node mynode;
+mynode.a = 1;
+dekhao(mynode.a);

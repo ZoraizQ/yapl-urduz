@@ -1,7 +1,8 @@
-banao a = 5;
-a = 3;
-banao b = 3.99f;
-dekhao(a+b); ~single line comment
+banao a = (5*(9-((3+1)-1))+4);
+banao b = 1+2+0.99f;
+b++;
+b++;
+dekhao(a); ~single line comment
 dekhao(b);
 ~~~banao mychar = 'c';dekhao(mychar);~~~
 agar b == 4 phir 

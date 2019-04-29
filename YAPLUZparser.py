@@ -51,12 +51,7 @@ def p_line_stmt(p): # non-terminal, starting
     """
     p[0] = ('Stmt',p[1])
     #print(p.lineno(2))
-    '''
-    try:
-        run(p[0])
-    except Exception as e:
-        print(e)
-    '''
+
 def p_uz_stmt_error(p):
     """uz : error SEMICOL
     """
@@ -178,6 +173,43 @@ def p_stmt_listindex(p):
 def p_stmt_listslice(p):
     """stmt : NAME DOT SLICE LPAREN exp COMMA exp RPAREN"""
     p[0] = ('ListF', 'Slice', p[1], p[5], p[7])
+
+def p_stmt_structcreate(p):
+    """stmt : STRUCT NAME SEP structargs SEP"""
+    p[0] = ('SCreate', p[1],p[2],p[4])
+
+def p_structargs(p):
+    """structargs : structexp COMMA structexp
+                  | structexp"""
+    if len(p) <= 3: # check
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
+
+def p_structexp(p):
+    """structexp : NAME
+                 | NAME EQUAL exp"""
+    if len(p) == 2:
+        p[0] = [p[1], None] # a (default value is None)
+    else:   
+        p[0] = [p[1], p[3]] # a = 1
+
+def p_stmt_structobj(p):
+    """stmt : MAKE NAME NAME"""
+    # where first name is name of struct
+    # second is name of object created
+    p[0] = ('SMade',p[2],p[3])
+
+def p_stmt_structvassign(p):
+    """stmt : NAME DOT NAME EQUAL exp"""
+    # first name is the struct obj, second is the obj variable, last is value expression
+    p[0] = ('SVAssign',p[1],p[3],p[5]) # struct variable assignment
+
+def p_exp_structvget(p):
+    """exp : NAME DOT NAME"""
+    # first name is the struct obj, second is the obj variable
+    p[0] = ('SVGet',p[1],p[3]) # struct variable get
+
 
 def p_exp_num(p): # handles unary minus, minusminus, plusplus
     """
@@ -304,9 +336,9 @@ def p_step_empty(p):
     """step : """
     p[0] = []
 
-# allow more parameters
+# allows any number of parameters
 def p_stmt_print(p):
-    """stmt : PRINT LPAREN exp RPAREN"""
+    """stmt : PRINT LPAREN optargs RPAREN"""
     p[0] = ('Print', p[3])
    
 def p_stmt_return(p):
@@ -398,87 +430,101 @@ def eec(e): # evaluate expression comparison
 
     return boolres
 
-def run(p): # p is the parsed tree / program
-    #print(f"CT: {p}")
-    if p[0] == 'Program':
-        proglist = p[1]  
-        for i in range(len(proglist)):
-            if proglist[i] != None:
-                run(proglist[i])
 
+def varCreate(p):
+    global var_dict
+    if type(p[1]) == tuple or type(p[1]) == list: # assignment tuple possible
+        # initialization with creation
+        varname = p[1][1]
+        if varname in var_dict:
+            raise KeyError(f"Error: A variable by that name already exists.")
+        value = p[1][2]
+        if type(value) == list:
+            varlist = []
+            for element in value:
+                varlist.append(element[1]) # assuming not list inside, only single var
+            var_dict[varname] = varlist
+        else:
+            #print("Current tree in varCreate", p, "Value",value)
+            var_dict[varname] = expEvaluate(value) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
+    else:
+        # only creation, default value None assigned
+        varname = p[1]
+        if varname in var_dict:
+            raise KeyError(f"Error: A variable by that name already exists.")
+        var_dict[varname]= None
+
+def expEvaluate(e):
+    global var_dict
+    etype = e[0]
+    if etype == 'BinaryEXP':
+        return eeb(e) # evaluate binary expression
+    elif etype == 'CompareEXP':
+        return eec(e) # evaluate expression comparison
+    elif etype == 'Dec':
+        return eeb(e[1]) - 1
+    elif etype == 'Inc':
+        return eeb(e[1]) + 1
+    elif etype == 'Group':
+        return expEvaluate(e[1])
+    elif etype == 'Name':
+        if not e[1] in var_dict:
+            raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
+        return var_dict[e[1]]
+    else: # Num, String, Char etc.
+        return e[1]
+
+
+def blockEvaluate(p): # p[0] == 'Block'
+    global var_dict
+    stmtlist = p[1]
+    for stmt in stmtlist:
+        if stmt != None and stmt[1] != []:
+            stmtEvaluate(stmt)
+
+
+def runProgram(p): # p[0] == 'Program': a bunch of statements
+    global var_dict
+    proglist = p[1]  
+    for stmt in proglist: # statements in proglist
+        if stmt != None and stmt[1] != []:
+            stmtEvaluate(stmt[1]) # since stmt[0] == 'Stmt' here in Program
+
+def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
+    #print(f"CT: {p}")    
     stype = p[0] # node type of parse tree
-    if stype == 'Stmt':
-        if p[1] != None and p[1] != []:
-            return run(p[1])
-    elif stype == 'Block': # run all statements in block of statement
-        slist = p[1]
-        for i in range(len(slist)):
-            if slist[i] != None:
-                run(slist[i])
-    elif stype == 'Name':
-        if not p[1] in var_dict:
-            raise NameError(f"Error: No such variable \'{p[1]}\' exists.")
-        return var_dict[p[1]]
-    elif stype == 'Group':
-        return run(p[1])
-    elif stype == 'BinaryEXP':
-        return eeb(p) # evaluate expression binary
-    elif stype == 'DecR':
+    if stype == 'DecR':
         var_dict[p[1][1]] -= 1
     elif stype == 'IncR':
         var_dict[p[1][1]] += 1
-    elif stype == 'Dec':
-        return run(p[1]) - 1
-    elif stype == 'Inc':
-        return run(p[1]) + 1
-    elif stype == 'CompareEXP':
-        return eec(p) # evaluate expression comparison
     elif stype == '=': # assignment
         if not p[1] in var_dict:
             raise NameError(f"Error: No such variable \'{p[1]}\' exists.")
-        var_dict[p[1]] = run(p[2]) # make an entry for the variable in the var_dict dictionary, where the key is the NAME and the value is the assigned expression
+        var_dict[p[1]] = expEvaluate(p[2]) # make an entry for the variable in the var_dict dictionary, where the key is the NAME and the value is the assigned expression
     elif stype == 'Made': # creation of a variable
-        if type(p[1]) == tuple or type(p[1]) == list: # assignment tuple possible
-            # initialization with creation
-            varname = p[1][1]
-            if varname in var_dict:
-                raise KeyError(f"Error: A variable by that name already exists.")
-            value = p[1][2]
-            if type(value) == list:
-                varlist = []
-                for element in value:
-                    varlist.append(element[1]) # assuming not list inside, only single var
-                var_dict[varname] = varlist
-            else:    
-                var_dict[varname] = run(value) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
-        else:
-            # only creation, default value None assigned
-            varname = p[1]
-            if varname in var_dict:
-                raise KeyError(f"Error: A variable by that name already exists.")
-            var_dict[varname]= None
+        varCreate(p)
     elif stype == 'If':    
         condition = p[1]
         then_stmts = p[2]
         #print(f"Condition: {condition} Then {then_stmts}")
         if eec(condition):
             #print("Running then statements in if")
-            run(then_stmts)
+            blockEvaluate(then_stmts)
     elif stype == 'IfElse':    
         condition = p[1]
         then_stmts = p[2]
         else_stmts = p[3]
         if eec(condition):
-            run(then_stmts)
+            blockEvaluate(then_stmts)
         else:
-            run(else_stmts)
+            blockEvaluate(else_stmts)
     elif stype == 'IfElifElse':
         condition = p[1]
         then_stmts = p[2]
         elif_stmts = p[3]
         else_stmts = p[4]
         if eec(condition):
-            run(then_stmts)
+            blockEvaluate(then_stmts)
         else:
             esTrue = False
             es_then = None
@@ -489,9 +535,9 @@ def run(p): # p is the parsed tree / program
                     esTrue = True
                     break
             if esTrue and es_then != None:
-                run(es_then)
+                blockEvaluate(es_then)
             else:
-                run(else_stmts)
+                blockEvaluate(else_stmts)
     elif stype == 'For':
         countervar = p[1]
         if not countervar in var_dict:
@@ -515,24 +561,26 @@ def run(p): # p is the parsed tree / program
         old_counterval = var_dict[countervar]
         for i in range(start, end+1, step):
             var_dict[countervar] = i
-            run(do_stmts)
-
+            blockEvaluate(do_stmts)
         var_dict[countervar] = old_counterval
 
     elif stype == 'DoWhile':
         do_stmts = p[1]
         condition = p[2]
-        run(do_stmts) # first time the block is just executed
+        blockEvaluate(do_stmts) # first time the block is just executed
         while eec(condition): # condition is necessary then onwards
-            run(do_stmts)
+            blockEvaluate(do_stmts)
     elif stype == 'Print':
-        result = run(p[1])
-        if type(result) == bool:
-            if result == True:
-                result = 'sach'
-            elif result == False:
-                result = 'ghalat'
-        print(result)  
+        printList = p[1]
+        for element in printList:
+            result = expEvaluate(element)
+            if type(result) == bool:
+                if result == True:
+                    result = 'sach'
+                elif result == False:
+                    result = 'ghalat'
+            print(result, end=" ")
+        print()  
     elif stype == 'ListF':
         listvar = p[2]
         if listvar in var_dict and type(var_dict[listvar]) == list:
@@ -551,11 +599,16 @@ def run(p): # p is the parsed tree / program
             elif ftype == 'Slice':
                 e2 = eeb(p[4])
                 var_dict[listvar] = vlist[e1:e2+1]
-
+    elif stype == 'SCreate':
+        pass
+    elif stype == 'SVAssign':
+        pass
+    elif stype == 'SVGet':
+        pass
+    elif stype == 'SMade':
+        pass
     else:       
-        if p[0] == 'Program':
-            return p[1]
-        elif p[1] in var_dict:
+        if p[1] in var_dict:
             return var_dict[p[1]]
         else:    
             return p[1]
@@ -570,13 +623,12 @@ while True:
     if not uzparsed:
         continue
     try:   
-        result = run(('Program',uzparsed))
+        result = stmtEvaluate(('Program',uzparsed))
     except Exception as e:
         print(e)
 
 while True:
-    #refresh state
-    var_dict.clear()
+    var_dict.clear() #refresh state
     fileHandler = open(sys.argv[1],"r")
     userin = fileHandler.read()
     fileHandler.close()
@@ -591,7 +643,7 @@ while True:
     print(userin)
     print("=========================================\n{OUTPUT}")
     try:
-        run(('Program',uzparsed))
+        runProgram(('Program',uzparsed))
     except Exception as e:
         print(e)
     

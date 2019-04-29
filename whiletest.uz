@@ -1,0 +1,10 @@
+banao x = 0;
+banao y;
+karo
+{
+dekhao(x);
+x++;
+y = 0;
+karo{dekhao("my","y:", y); y = y + 1;} jabtak (y <= 2); 
+}
+jabtak (x != 4);
