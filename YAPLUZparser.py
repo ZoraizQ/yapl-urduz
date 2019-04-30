@@ -166,9 +166,8 @@ def p_stmt_fret(p):
     p[0] = ("FReturn",p[2])
 
 def p_stmt_funcdef(p): 
-    """stmt : FUNCTION NAME LPAREN optargs RPAREN stmtblock"""
-    p[0] = ("Func",p[2],p[4],p[6]) # optsargs may be empty (p[2])
-
+    """stmt : FUNCTION NAME LPAREN structargs RPAREN stmtblock"""
+    p[0] = ("Func",p[2],p[4],p[6]) # structargs used because some parameters can have None value, and some pre-defined
 def p_list(p):
     """list : LBRACK optargs RBRACK"""
     p[0] = p[2]
@@ -480,6 +479,28 @@ def varCreate(p):
             raise KeyError(f"Error: A variable by that name already exists.")
         globalenv[varname]= None
 
+def templateFunction(fargs, fstmtsblock):
+    stmtlist = fstmtsblock
+    # currently every fargs stores every variable in 2-length tuples (NAME,VALUE)
+    # need to convert to env dictionary form
+    fenv_dict = {}
+    for fa in fargs:
+        fenv_dict[fa[0]] = fa[1]
+    # fargs list converted to function environment of variables
+
+    for stmt in stmtlist:
+        if stmt != None and stmt[1] != []:
+            stype = stmt[0]
+            if stype == 'FReturn':
+                returnVal = expEvaluate(p[1])
+                return returnVal
+                continue # skip evaluation of ret/call stmt
+            elif stype == 'FCall':
+                return functionCall(stmt)
+                continue
+            stmtEvaluate(stmt)
+            #print(globalenv)
+
 def functionCall(f):
     func = f[1]
     fargs = f[2]
@@ -490,8 +511,14 @@ def functionCall(f):
     if len(fargs) > len(defined_fargs):
         raise RuntimeError(f"Error: Function {func} was given too many arguments.")
 
+    #mapped values of given fargs to defined fargs
+    for i in range(len(fargs)): #dfa = defined function argument
+        defined_fargs[i] = (defined_fargs[i][0], expEvaluate(fargs[i])) 
+        
+    #print("MAPPED FARGS:", defined_fargs)
     # more error handling for args, but assume same number of args for now
-    templateFunction(fargs, funcdef[func][0])
+    #print(funcdef[func][1])
+    templateFunction(defined_fargs, funcdef[func][1])
     
 
 
@@ -510,7 +537,7 @@ def expEvaluate(e):
         return eec(e) # evaluate expression comparison
     elif etype == 'Group':
         return expEvaluate(e[1])
-    elif etype == 'Name':
+    elif etype == 'Name': # get value of variable
         if not e[1] in globalenv:
             raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
         return globalenv[e[1]]
@@ -675,6 +702,11 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         fstmts = p[3]
         if func in funcdef:
             raise KeyError(f"Function {func} has already been defined.")
+        
+        # evaluate fargs values further
+        for i in range(len(fargs)):
+            fargs[i] = (fargs[i][0], expEvaluate(fargs[i][1]))
+            
         funcdef[func] = [fargs, fstmts] # default values of args, fargs must be resolved further
 
     elif stype == 'ListF':
@@ -737,25 +769,7 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         else:    
             return p[1]
     
-    #print("GLOBAL ENV:",globalenv)
-
-def templateFunction(fargs, fstmtsblock):
-    print("Inside function")
-    print(fargs)
-    stmtlist = fstmtsblock
-    for stmt in stmtlist:
-        if stmt != None and stmt[1] != []:
-            stype = stmt[0]
-            if stype == 'FReturn':
-                returnVal = expEvaluate(p[1])
-                return returnVal
-                continue # skip evaluation of ret/call stmt
-            elif stype == 'FCall':
-                return functionCall(stmt)
-                continue
-            stmtEvaluate(stmt)
-            print(globalenv)
-    
+    #print("GLOBAL ENV:",globalenv)    
     
 while True:
     break

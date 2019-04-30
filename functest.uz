@@ -1,9 +1,9 @@
-kaam f(x){
+kaam f(i,y="Inside function"){
+dekhao(y);
 x++;
-bhejo(x);
+bhejo(i);
 };
 
 banao x = 3;
-
 bullao f(x); ~stmt
 banao y = f(x); ~exp

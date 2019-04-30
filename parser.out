@@ -40,7 +40,7 @@ Rule 28    exp -> NAME
 Rule 29    exp -> NAME LPAREN optargs RPAREN
 Rule 30    stmt -> CALL NAME LPAREN optargs RPAREN
 Rule 31    stmt -> RETURN exp
-Rule 32    stmt -> FUNCTION NAME LPAREN optargs RPAREN stmtblock
+Rule 32    stmt -> FUNCTION NAME LPAREN structargs RPAREN stmtblock
 Rule 33    list -> LBRACK optargs RBRACK
 Rule 34    stmt -> NAME DOT POP LPAREN exp RPAREN
 Rule 35    stmt -> NAME DOT PUSH LPAREN exp RPAREN
@@ -154,12 +154,12 @@ elsif                : 65 66
 exp                  : 12 13 14 14 15 15 16 16 17 17 18 18 19 19 20 20 21 21 22 22 23 23 24 24 25 25 26 26 27 27 31 34 35 36 37 37 42 44 50 51 52 53 54 59 61 63 64 65 66 70 71 71 72
 line                 : 1
 list                 : 62
-optargs              : 29 30 32 33 74
+optargs              : 29 30 33 74
 step                 : 71
 stmt                 : 2 7
 stmtS                : 5 7 8
 stmtblock            : 32 64 65 65 66 70 71
-structargs           : 38 39
+structargs           : 32 38 39
 structexp            : 39 40
 uz                   : 1 0
 
@@ -174,7 +174,7 @@ state 0
     (2) line -> . stmt SEMICOL
     (30) stmt -> . CALL NAME LPAREN optargs RPAREN
     (31) stmt -> . RETURN exp
-    (32) stmt -> . FUNCTION NAME LPAREN optargs RPAREN stmtblock
+    (32) stmt -> . FUNCTION NAME LPAREN structargs RPAREN stmtblock
     (34) stmt -> . NAME DOT POP LPAREN exp RPAREN
     (35) stmt -> . NAME DOT PUSH LPAREN exp RPAREN
     (37) stmt -> . NAME DOT SLICE LPAREN exp COMMA exp RPAREN
@@ -271,7 +271,7 @@ state 2
     (2) line -> . stmt SEMICOL
     (30) stmt -> . CALL NAME LPAREN optargs RPAREN
     (31) stmt -> . RETURN exp
-    (32) stmt -> . FUNCTION NAME LPAREN optargs RPAREN stmtblock
+    (32) stmt -> . FUNCTION NAME LPAREN structargs RPAREN stmtblock
     (34) stmt -> . NAME DOT POP LPAREN exp RPAREN
     (35) stmt -> . NAME DOT PUSH LPAREN exp RPAREN
     (37) stmt -> . NAME DOT SLICE LPAREN exp COMMA exp RPAREN
@@ -544,7 +544,7 @@ state 9
 
 state 10
 
-    (32) stmt -> FUNCTION . NAME LPAREN optargs RPAREN stmtblock
+    (32) stmt -> FUNCTION . NAME LPAREN structargs RPAREN stmtblock
 
     NAME            shift and go to state 55
 
@@ -1977,7 +1977,7 @@ state 54
 
 state 55
 
-    (32) stmt -> FUNCTION NAME . LPAREN optargs RPAREN stmtblock
+    (32) stmt -> FUNCTION NAME . LPAREN structargs RPAREN stmtblock
 
     LPAREN          shift and go to state 94
 
@@ -2173,7 +2173,7 @@ state 62
     (9) stmtS -> .
     (30) stmt -> . CALL NAME LPAREN optargs RPAREN
     (31) stmt -> . RETURN exp
-    (32) stmt -> . FUNCTION NAME LPAREN optargs RPAREN stmtblock
+    (32) stmt -> . FUNCTION NAME LPAREN structargs RPAREN stmtblock
     (34) stmt -> . NAME DOT POP LPAREN exp RPAREN
     (35) stmt -> . NAME DOT PUSH LPAREN exp RPAREN
     (37) stmt -> . NAME DOT SLICE LPAREN exp COMMA exp RPAREN
@@ -3545,59 +3545,16 @@ state 93
 
 state 94
 
-    (32) stmt -> FUNCTION NAME LPAREN . optargs RPAREN stmtblock
-    (10) optargs -> . args
-    (11) optargs -> .
-    (12) args -> . exp COMMA args
-    (13) args -> . exp
-    (14) exp -> . exp PLUS exp
-    (15) exp -> . exp MINUS exp
-    (16) exp -> . exp MULTIPLY exp
-    (17) exp -> . exp DIVIDE exp
-    (18) exp -> . exp POWER exp
-    (19) exp -> . exp MODULUS exp
-    (20) exp -> . exp AND exp
-    (21) exp -> . exp OR exp
-    (22) exp -> . exp GT exp
-    (23) exp -> . exp LT exp
-    (24) exp -> . exp GTE exp
-    (25) exp -> . exp LTE exp
-    (26) exp -> . exp EE exp
-    (27) exp -> . exp NE exp
-    (28) exp -> . NAME
-    (29) exp -> . NAME LPAREN optargs RPAREN
-    (36) exp -> . NAME DOT INDEX LPAREN exp RPAREN
-    (45) exp -> . NAME DOT NAME
-    (46) exp -> . MINUS INT
-    (47) exp -> . MINUS FLOAT
-    (48) exp -> . INT
-    (49) exp -> . FLOAT
-    (50) exp -> . DEC exp
-    (51) exp -> . INC exp
-    (54) exp -> . NOT exp
-    (55) exp -> . TRUE
-    (56) exp -> . FALSE
-    (57) exp -> . STRING
-    (58) exp -> . CHAR
-    (59) exp -> . LPAREN exp RPAREN
+    (32) stmt -> FUNCTION NAME LPAREN . structargs RPAREN stmtblock
+    (39) structargs -> . structexp COMMA structargs
+    (40) structargs -> . structexp
+    (41) structexp -> . NAME
+    (42) structexp -> . NAME EQUAL exp
 
-    RPAREN          reduce using rule 11 (optargs -> .)
-    NAME            shift and go to state 37
-    MINUS           shift and go to state 21
-    INT             shift and go to state 22
-    FLOAT           shift and go to state 23
-    DEC             shift and go to state 13
-    INC             shift and go to state 14
-    NOT             shift and go to state 24
-    TRUE            shift and go to state 25
-    FALSE           shift and go to state 26
-    STRING          shift and go to state 27
-    CHAR            shift and go to state 28
-    LPAREN          shift and go to state 7
+    NAME            shift and go to state 114
 
-    optargs                        shift and go to state 114
-    args                           shift and go to state 75
-    exp                            shift and go to state 76
+    structargs                     shift and go to state 115
+    structexp                      shift and go to state 116
 
 state 95
 
@@ -3607,10 +3564,10 @@ state 95
     (41) structexp -> . NAME
     (42) structexp -> . NAME EQUAL exp
 
-    NAME            shift and go to state 115
+    NAME            shift and go to state 114
 
-    structargs                     shift and go to state 116
-    structexp                      shift and go to state 117
+    structargs                     shift and go to state 117
+    structexp                      shift and go to state 116
 
 state 96
 
@@ -4179,35 +4136,37 @@ state 113
 
 state 114
 
-    (32) stmt -> FUNCTION NAME LPAREN optargs . RPAREN stmtblock
-
-    RPAREN          shift and go to state 136
-
-
-state 115
-
     (41) structexp -> NAME .
     (42) structexp -> NAME . EQUAL exp
 
     COMMA           reduce using rule 41 (structexp -> NAME .)
+    RPAREN          reduce using rule 41 (structexp -> NAME .)
     SEP             reduce using rule 41 (structexp -> NAME .)
-    EQUAL           shift and go to state 137
+    EQUAL           shift and go to state 136
+
+
+state 115
+
+    (32) stmt -> FUNCTION NAME LPAREN structargs . RPAREN stmtblock
+
+    RPAREN          shift and go to state 137
 
 
 state 116
 
-    (38) stmt -> STRUCT NAME SEP structargs . SEP
+    (39) structargs -> structexp . COMMA structargs
+    (40) structargs -> structexp .
 
-    SEP             shift and go to state 138
+    COMMA           shift and go to state 138
+    RPAREN          reduce using rule 40 (structargs -> structexp .)
+    SEP             reduce using rule 40 (structargs -> structexp .)
 
 
 state 117
 
-    (39) structargs -> structexp . COMMA structargs
-    (40) structargs -> structexp .
+    (38) stmt -> STRUCT NAME SEP structargs . SEP
 
-    COMMA           shift and go to state 139
-    SEP             reduce using rule 40 (structargs -> structexp .)
+    SEP             shift and go to state 139
 
 
 state 118
@@ -4384,7 +4343,7 @@ state 125
     (9) stmtS -> .
     (30) stmt -> . CALL NAME LPAREN optargs RPAREN
     (31) stmt -> . RETURN exp
-    (32) stmt -> . FUNCTION NAME LPAREN optargs RPAREN stmtblock
+    (32) stmt -> . FUNCTION NAME LPAREN structargs RPAREN stmtblock
     (34) stmt -> . NAME DOT POP LPAREN exp RPAREN
     (35) stmt -> . NAME DOT PUSH LPAREN exp RPAREN
     (37) stmt -> . NAME DOT SLICE LPAREN exp COMMA exp RPAREN
@@ -4473,7 +4432,7 @@ state 126
     (9) stmtS -> .
     (30) stmt -> . CALL NAME LPAREN optargs RPAREN
     (31) stmt -> . RETURN exp
-    (32) stmt -> . FUNCTION NAME LPAREN optargs RPAREN stmtblock
+    (32) stmt -> . FUNCTION NAME LPAREN structargs RPAREN stmtblock
     (34) stmt -> . NAME DOT POP LPAREN exp RPAREN
     (35) stmt -> . NAME DOT PUSH LPAREN exp RPAREN
     (37) stmt -> . NAME DOT SLICE LPAREN exp COMMA exp RPAREN
@@ -4788,16 +4747,6 @@ state 135
 
 state 136
 
-    (32) stmt -> FUNCTION NAME LPAREN optargs RPAREN . stmtblock
-    (5) stmtblock -> . LBRACE stmtS RBRACE
-    (6) stmtblock -> . LBRACE error RBRACE
-
-    LBRACE          shift and go to state 62
-
-    stmtblock                      shift and go to state 151
-
-state 137
-
     (42) structexp -> NAME EQUAL . exp
     (14) exp -> . exp PLUS exp
     (15) exp -> . exp MINUS exp
@@ -4843,16 +4792,19 @@ state 137
     CHAR            shift and go to state 28
     LPAREN          shift and go to state 7
 
-    exp                            shift and go to state 152
+    exp                            shift and go to state 151
+
+state 137
+
+    (32) stmt -> FUNCTION NAME LPAREN structargs RPAREN . stmtblock
+    (5) stmtblock -> . LBRACE stmtS RBRACE
+    (6) stmtblock -> . LBRACE error RBRACE
+
+    LBRACE          shift and go to state 62
+
+    stmtblock                      shift and go to state 152
 
 state 138
-
-    (38) stmt -> STRUCT NAME SEP structargs SEP .
-
-    SEMICOL         reduce using rule 38 (stmt -> STRUCT NAME SEP structargs SEP .)
-
-
-state 139
 
     (39) structargs -> structexp COMMA . structargs
     (39) structargs -> . structexp COMMA structargs
@@ -4860,10 +4812,17 @@ state 139
     (41) structexp -> . NAME
     (42) structexp -> . NAME EQUAL exp
 
-    NAME            shift and go to state 115
+    NAME            shift and go to state 114
 
-    structexp                      shift and go to state 117
+    structexp                      shift and go to state 116
     structargs                     shift and go to state 153
+
+state 139
+
+    (38) stmt -> STRUCT NAME SEP structargs SEP .
+
+    SEMICOL         reduce using rule 38 (stmt -> STRUCT NAME SEP structargs SEP .)
+
 
 state 140
 
@@ -5094,13 +5053,6 @@ state 150
 
 state 151
 
-    (32) stmt -> FUNCTION NAME LPAREN optargs RPAREN stmtblock .
-
-    SEMICOL         reduce using rule 32 (stmt -> FUNCTION NAME LPAREN optargs RPAREN stmtblock .)
-
-
-state 152
-
     (42) structexp -> NAME EQUAL exp .
     (14) exp -> exp . PLUS exp
     (15) exp -> exp . MINUS exp
@@ -5118,6 +5070,7 @@ state 152
     (27) exp -> exp . NE exp
 
     COMMA           reduce using rule 42 (structexp -> NAME EQUAL exp .)
+    RPAREN          reduce using rule 42 (structexp -> NAME EQUAL exp .)
     SEP             reduce using rule 42 (structexp -> NAME EQUAL exp .)
     PLUS            shift and go to state 41
     MINUS           shift and go to state 42
@@ -5135,10 +5088,18 @@ state 152
     NE              shift and go to state 54
 
 
+state 152
+
+    (32) stmt -> FUNCTION NAME LPAREN structargs RPAREN stmtblock .
+
+    SEMICOL         reduce using rule 32 (stmt -> FUNCTION NAME LPAREN structargs RPAREN stmtblock .)
+
+
 state 153
 
     (39) structargs -> structexp COMMA structargs .
 
+    RPAREN          reduce using rule 39 (structargs -> structexp COMMA structargs .)
     SEP             reduce using rule 39 (structargs -> structexp COMMA structargs .)
 
 
