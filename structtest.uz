@@ -1,5 +1,7 @@
-~daba Node|a=1, c=2|;
+daba Node|id,ip="127.0.0.1", port=5004|;
 
 banao Node mynode;
-mynode.a = 1;
-dekhao(mynode.a);
+mynode.id = 87;
+mynode.ip = "192.168.1.1";
+mynode.port = 5009;
+dekhao(mynode.id, mynode.ip, mynode.port);

@@ -176,12 +176,12 @@ def p_stmt_listslice(p):
 
 def p_stmt_structcreate(p):
     """stmt : STRUCT NAME SEP structargs SEP"""
-    p[0] = ('SCreate', p[1],p[2],p[4])
+    p[0] = ('SCreate', p[2], p[4])
 
 def p_structargs(p):
-    """structargs : structexp COMMA structexp
+    """structargs : structexp COMMA structargs
                   | structexp"""
-    if len(p) <= 3: # check
+    if len(p) < 3: # check
         p[0] = [p[1]]
     else:
         p[0] = [p[1]] + p[3]
@@ -190,9 +190,9 @@ def p_structexp(p):
     """structexp : NAME
                  | NAME EQUAL exp"""
     if len(p) == 2:
-        p[0] = [p[1], None] # a (default value is None)
+        p[0] = (p[1], None) # a (default value is None)
     else:   
-        p[0] = [p[1], p[3]] # a = 1
+        p[0] = (p[1], p[3]) # a = 1
 
 def p_stmt_structobj(p):
     """stmt : MAKE NAME NAME"""
@@ -309,6 +309,17 @@ def p_elsif_empty(p):
     """
     p[0] = []
 
+def p_stmt_break(p):
+    """
+    stmt : BREAK
+    """
+    p[0] = ('Break')
+
+def p_stmt_continue(p):
+    """
+    stmt : CONTINUE
+    """
+    p[0] = ('Continue')
 
 # karo {dekhao(x); x++;} jabtak (x != 4);
 def p_stmt_while(p):
@@ -351,7 +362,9 @@ def p_error(p):
     return
 
 parser = yacc.yacc() # start parsing, yacc object created
-var_dict = {}
+isBroken = False
+globalenv = {}
+structdef = {}
 
 def eeb(e): #evaluate expression binary
     operator = e[1]
@@ -377,9 +390,9 @@ def eeb(e): #evaluate expression binary
     elif operator == '%':
         return eeb(e[2]) % eeb(e[3])
     elif e[0] == 'Name':
-        if not e[1] in var_dict:
+        if not e[1] in globalenv:
             raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
-        return var_dict[e[1]] 
+        return globalenv[e[1]] 
     else:
         if type(e[1])==str or type(e[1])==bool:
             raise TypeError("Error: Type not supported with this operation.")
@@ -422,9 +435,9 @@ def eec(e): # evaluate expression comparison
             raise TypeError("Error: Type not supported with this operation.")
         boolres = paramL or paramR
     elif e[0] == 'Name':
-        if not e[1] in var_dict:
+        if not e[1] in globalenv:
             raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
-        return var_dict[e[1]]
+        return globalenv[e[1]]
     else:
         boolres = e[1]
 
@@ -432,75 +445,95 @@ def eec(e): # evaluate expression comparison
 
 
 def varCreate(p):
-    global var_dict
+    global globalenv
     if type(p[1]) == tuple or type(p[1]) == list: # assignment tuple possible
         # initialization with creation
         varname = p[1][1]
-        if varname in var_dict:
+        if varname in globalenv:
             raise KeyError(f"Error: A variable by that name already exists.")
         value = p[1][2]
         if type(value) == list:
             varlist = []
             for element in value:
                 varlist.append(element[1]) # assuming not list inside, only single var
-            var_dict[varname] = varlist
+            globalenv[varname] = varlist
         else:
             #print("Current tree in varCreate", p, "Value",value)
-            var_dict[varname] = expEvaluate(value) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
+            globalenv[varname] = expEvaluate(value) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
     else:
         # only creation, default value None assigned
         varname = p[1]
-        if varname in var_dict:
+        if varname in globalenv:
             raise KeyError(f"Error: A variable by that name already exists.")
-        var_dict[varname]= None
+        globalenv[varname]= None
 
 def expEvaluate(e):
-    global var_dict
+    global globalenv
+    if e == None: # none expression
+        return None
+
     etype = e[0]
     if etype == 'BinaryEXP':
         return eeb(e) # evaluate binary expression
     elif etype == 'CompareEXP':
         return eec(e) # evaluate expression comparison
+    elif etype == 'Group':
+        return expEvaluate(e[1])
+    elif etype == 'Name':
+        if not e[1] in globalenv:
+            raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
+        return globalenv[e[1]]
+    elif etype == 'SVGet':
+        structObj = e[1]
+        varName = e[2]
+        if not structObj in globalenv:
+            raise NameError(f"Error: No such variable \'{p[1]}\' exists.") 
+        
+        if not varName in globalenv[structObj]:
+            raise NameError(f"Error: No such variable \'{p[1]}\' exists inside that struct.") 
+        varVal = globalenv[structObj][varName]
+        return varVal
     elif etype == 'Dec':
         return eeb(e[1]) - 1
     elif etype == 'Inc':
         return eeb(e[1]) + 1
-    elif etype == 'Group':
-        return expEvaluate(e[1])
-    elif etype == 'Name':
-        if not e[1] in var_dict:
-            raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
-        return var_dict[e[1]]
     else: # Num, String, Char etc.
         return e[1]
 
 
 def blockEvaluate(p): # p[0] == 'Block'
-    global var_dict
+    global globalenv
+    global isBroken
     stmtlist = p[1]
     for stmt in stmtlist:
+        if stmt == 'Continue':
+            break # breaking this iteration of the loop OR block later, so this is continue actually
+        if stmt == 'Break':
+            isBroken = True # this also breaks the next iterations/stmts, only loops turn this off after execution, so give error in normal blocks
+            break # break this iteration
         if stmt != None and stmt[1] != []:
             stmtEvaluate(stmt)
-
+            
 
 def runProgram(p): # p[0] == 'Program': a bunch of statements
-    global var_dict
+    global globalenv
     proglist = p[1]  
     for stmt in proglist: # statements in proglist
         if stmt != None and stmt[1] != []:
             stmtEvaluate(stmt[1]) # since stmt[0] == 'Stmt' here in Program
 
 def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
+    global structdef, isBroken
     #print(f"CT: {p}")    
     stype = p[0] # node type of parse tree
     if stype == 'DecR':
-        var_dict[p[1][1]] -= 1
+        globalenv[p[1][1]] -= 1
     elif stype == 'IncR':
-        var_dict[p[1][1]] += 1
+        globalenv[p[1][1]] += 1
     elif stype == '=': # assignment
-        if not p[1] in var_dict:
+        if not p[1] in globalenv:
             raise NameError(f"Error: No such variable \'{p[1]}\' exists.")
-        var_dict[p[1]] = expEvaluate(p[2]) # make an entry for the variable in the var_dict dictionary, where the key is the NAME and the value is the assigned expression
+        globalenv[p[1]] = expEvaluate(p[2]) # make an entry for the variable in the globalenv dictionary, where the key is the NAME and the value is the assigned expression
     elif stype == 'Made': # creation of a variable
         varCreate(p)
     elif stype == 'If':    
@@ -540,7 +573,7 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
                 blockEvaluate(else_stmts)
     elif stype == 'For':
         countervar = p[1]
-        if not countervar in var_dict:
+        if not countervar in globalenv:
             raise NameError(f"Error: No such variable \'{p[1]}\' exists.") 
         start = eeb(p[2]) # must be numerical expression
         end = eeb(p[3]) # evaluating numerical expressions
@@ -558,18 +591,24 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         if start > end and step > 0:
             raise RuntimeError("Error: Wrong step given.")
         
-        old_counterval = var_dict[countervar]
+        old_counterval = globalenv[countervar]
         for i in range(start, end+1, step):
-            var_dict[countervar] = i
+            globalenv[countervar] = i
             blockEvaluate(do_stmts)
-        var_dict[countervar] = old_counterval
+            if isBroken:
+                break
+        isBroken = False # reset break
+        globalenv[countervar] = old_counterval
 
     elif stype == 'DoWhile':
         do_stmts = p[1]
         condition = p[2]
         blockEvaluate(do_stmts) # first time the block is just executed
         while eec(condition): # condition is necessary then onwards
+            if isBroken:
+                break
             blockEvaluate(do_stmts)
+        isBroken = False
     elif stype == 'Print':
         printList = p[1]
         for element in printList:
@@ -583,37 +622,65 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         print()  
     elif stype == 'ListF':
         listvar = p[2]
-        if listvar in var_dict and type(var_dict[listvar]) == list:
+        if listvar in globalenv and type(globalenv[listvar]) == list:
             ftype = p[1]
             e1 = eeb(p[3]) # evaluate expression, error handling
-            vlist = var_dict[listvar]
+            vlist = globalenv[listvar]
             if ftype == 'Pop':
                 if e1 == 0: # remove head of list
-                    del var_dict[listvar][0]
+                    del globalenv[listvar][0]
                 elif e1 == 1: # remove tail of list
-                    var_dict[listvar].pop()
+                    globalenv[listvar].pop()
             elif ftype == 'Push': #append
-                var_dict[listvar].append(e1)
+                globalenv[listvar].append(e1)
             elif ftype == 'Index':
                 print(vlist[e1])
             elif ftype == 'Slice':
                 e2 = eeb(p[4])
-                var_dict[listvar] = vlist[e1:e2+1]
+                globalenv[listvar] = vlist[e1:e2+1]
     elif stype == 'SCreate':
-        pass
-    elif stype == 'SVAssign':
-        pass
-    elif stype == 'SVGet':
-        pass
+        structname = p[1]
+        structargs = p[2]
+        if structname in structdef:
+            raise KeyError(f"Error: A struct by that name is already defined.")
+        structdef[structname] = {} # create empty definition for given struct initially
+        # add structargs / member variables
+        for sarg in structargs:
+            varName = sarg[0]
+            varVal = sarg[1]
+            if varName in structdef[structname]:
+                raise KeyError(f"Error: Duplicate variable in stuct definition.") 
+            structdef[structname][varName] = expEvaluate(varVal) # varVal may be None here.
+    
     elif stype == 'SMade':
-        pass
+        structname = p[1]
+        varName = p[2] # object variable
+        if not structname in structdef:
+            raise NameError(f"Error: No struct of that name is defined.")
+        
+        if varName in globalenv:
+            raise KeyError(f"Error: This variable already exists.") 
+        
+        globalenv[varName] = structdef[structname]
+    
+    elif stype == 'SVAssign':
+        structObj = p[1]
+        varName = p[2]
+        varVal = p[3]
+        if not structObj in globalenv:
+            raise NameError(f"Error: No such variable \'{p[1]}\' exists.") 
+        
+        if not varName in globalenv[structObj]:
+            raise NameError(f"Error: No such variable \'{p[1]}\' exists inside that struct.") 
+        
+        globalenv[structObj][varName] = expEvaluate(varVal)
     else:       
-        if p[1] in var_dict:
-            return var_dict[p[1]]
+        if p[1] in globalenv:
+            return globalenv[p[1]]
         else:    
             return p[1]
     
-    #print("Variables:",var_dict)
+    #print("GLOBAL ENV:",globalenv)
 
 
 while True:
@@ -628,7 +695,8 @@ while True:
         print(e)
 
 while True:
-    var_dict.clear() #refresh state
+    globalenv.clear() #refresh state
+    structdef.clear()
     fileHandler = open(sys.argv[1],"r")
     userin = fileHandler.read()
     fileHandler.close()

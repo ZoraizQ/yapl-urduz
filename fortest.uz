@@ -1,6 +1,16 @@
 banao i = 99;
 challo i = 5 se 1 tak -2
 { 
-dekhao(i); 
+dekhao(i);
+taapo;
+dekhao(i);
 }; 
 dekhao(i);
+
+challo i = 1 se 3 tak
+{
+dekhao(i);
+
+agar i == 2 phir{rukko;};
+
+};

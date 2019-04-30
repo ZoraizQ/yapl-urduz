@@ -28,7 +28,9 @@ reserved = { # single rule, special
     'push':'PUSH',
     'index':'INDEX',
     'slice':'SLICE',
-    'daba':'STRUCT'
+    'daba':'STRUCT',
+    'rukko':'BREAK',
+    'taapo':'CONTINUE'
 }
 
 # list of all possible tokens, the name 'tokens' is necessary

@@ -45,7 +45,7 @@ Rule 32    stmt -> NAME DOT PUSH LPAREN exp RPAREN
 Rule 33    stmt -> NAME DOT INDEX LPAREN exp RPAREN
 Rule 34    stmt -> NAME DOT SLICE LPAREN exp COMMA exp RPAREN
 Rule 35    stmt -> STRUCT NAME SEP structargs SEP
-Rule 36    structargs -> structexp COMMA structexp
+Rule 36    structargs -> structexp COMMA structargs
 Rule 37    structargs -> structexp
 Rule 38    structexp -> NAME
 Rule 39    structexp -> NAME EQUAL exp
@@ -74,31 +74,35 @@ Rule 61    stmt -> IF exp THEN stmtblock
 Rule 62    stmt -> IF exp THEN stmtblock elsif ELSE THEN stmtblock
 Rule 63    elsif -> ELIF exp THEN stmtblock elsif
 Rule 64    elsif -> <empty>
-Rule 65    stmt -> DO stmtblock WHILE exp
-Rule 66    stmt -> FOR NAME EQUAL exp TO exp UNTIL step stmtblock
-Rule 67    step -> exp
-Rule 68    step -> <empty>
-Rule 69    stmt -> PRINT LPAREN optargs RPAREN
-Rule 70    stmt -> RETURN exp
+Rule 65    stmt -> BREAK
+Rule 66    stmt -> CONTINUE
+Rule 67    stmt -> DO stmtblock WHILE exp
+Rule 68    stmt -> FOR NAME EQUAL exp TO exp UNTIL step stmtblock
+Rule 69    step -> exp
+Rule 70    step -> <empty>
+Rule 71    stmt -> PRINT LPAREN optargs RPAREN
+Rule 72    stmt -> RETURN exp
 
 Terminals, with rules where they appear
 
 AND                  : 21
+BREAK                : 65
 CALL                 : 10
 CHAR                 : 55
 COMMA                : 13 34 36
 COMMENT              : 
+CONTINUE             : 66
 DEC                  : 47 49
 DIVIDE               : 18
-DO                   : 65
+DO                   : 67
 DOT                  : 31 32 33 34 41 42
 EE                   : 27
 ELIF                 : 63
 ELSE                 : 62
-EQUAL                : 39 41 58 59 60 66
+EQUAL                : 39 41 58 59 60 68
 FALSE                : 53
 FLOAT                : 44 46
-FOR                  : 66
+FOR                  : 68
 FUNCTION             : 
 GT                   : 23
 GTE                  : 25
@@ -108,7 +112,7 @@ INDEX                : 33
 INT                  : 43 45
 LBRACE               : 5 6
 LBRACK               : 30
-LPAREN               : 10 31 32 33 34 56 69
+LPAREN               : 10 31 32 33 34 56 71
 LT                   : 24
 LTE                  : 26
 MAKE                 : 40 57 58 59
@@ -116,7 +120,7 @@ MINUS                : 16 43 44
 MODULUS              : 20
 MULTICOMMENT         : 
 MULTIPLY             : 17
-NAME                 : 10 29 31 32 33 34 35 38 39 40 40 41 41 42 42 57 58 59 60 66
+NAME                 : 10 29 31 32 33 34 35 38 39 40 40 41 41 42 42 57 58 59 60 68
 NE                   : 28
 NEWL                 : 
 NOT                  : 51
@@ -124,38 +128,38 @@ OR                   : 22
 PLUS                 : 15
 POP                  : 31
 POWER                : 19
-PRINT                : 69
+PRINT                : 71
 PUSH                 : 32
 RBRACE               : 5 6
 RBRACK               : 30
-RETURN               : 70
-RPAREN               : 10 31 32 33 34 56 69
+RETURN               : 72
+RPAREN               : 10 31 32 33 34 56 71
 SEMICOL              : 2 3 7 8
 SEP                  : 35 35
 SLICE                : 34
 STRING               : 54
 STRUCT               : 35
 THEN                 : 61 62 62 63
-TO                   : 66
+TO                   : 68
 TRUE                 : 52
-UNTIL                : 66
-WHILE                : 65
+UNTIL                : 68
+WHILE                : 67
 error                : 3 6 8
 
 Nonterminals, with rules where they appear
 
 args                 : 11 13
 elsif                : 62 63
-exp                  : 13 14 15 15 16 16 17 17 18 18 19 19 20 20 21 21 22 22 23 23 24 24 25 25 26 26 27 27 28 28 31 32 33 34 34 39 41 47 48 49 50 51 56 58 60 61 62 63 65 66 66 67 70
+exp                  : 13 14 15 15 16 16 17 17 18 18 19 19 20 20 21 21 22 22 23 23 24 24 25 25 26 26 27 27 28 28 31 32 33 34 34 39 41 47 48 49 50 51 56 58 60 61 62 63 67 68 68 69 72
 line                 : 1
 list                 : 59
-optargs              : 10 30 69
-step                 : 66
+optargs              : 10 30 71
+step                 : 68
 stmt                 : 2 7
 stmtS                : 5 7 8
-stmtblock            : 61 62 62 63 65 66
-structargs           : 35
-structexp            : 36 36 37
+stmtblock            : 61 62 62 63 67 68
+structargs           : 35 36
+structexp            : 36 37
 uz                   : 1 0
 
 Parsing method: LALR
@@ -182,10 +186,12 @@ state 0
     (60) stmt -> . NAME EQUAL exp
     (61) stmt -> . IF exp THEN stmtblock
     (62) stmt -> . IF exp THEN stmtblock elsif ELSE THEN stmtblock
-    (65) stmt -> . DO stmtblock WHILE exp
-    (66) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
-    (69) stmt -> . PRINT LPAREN optargs RPAREN
-    (70) stmt -> . RETURN exp
+    (65) stmt -> . BREAK
+    (66) stmt -> . CONTINUE
+    (67) stmt -> . DO stmtblock WHILE exp
+    (68) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
+    (71) stmt -> . PRINT LPAREN optargs RPAREN
+    (72) stmt -> . RETURN exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -222,21 +228,23 @@ state 0
     STRUCT          shift and go to state 8
     MAKE            shift and go to state 9
     IF              shift and go to state 12
-    DO              shift and go to state 13
-    FOR             shift and go to state 14
-    PRINT           shift and go to state 15
-    RETURN          shift and go to state 16
-    CALL            shift and go to state 17
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    BREAK           shift and go to state 13
+    CONTINUE        shift and go to state 14
+    DO              shift and go to state 15
+    FOR             shift and go to state 16
+    PRINT           shift and go to state 17
+    RETURN          shift and go to state 18
+    CALL            shift and go to state 19
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
     uz                             shift and go to state 1
@@ -272,10 +280,12 @@ state 2
     (60) stmt -> . NAME EQUAL exp
     (61) stmt -> . IF exp THEN stmtblock
     (62) stmt -> . IF exp THEN stmtblock elsif ELSE THEN stmtblock
-    (65) stmt -> . DO stmtblock WHILE exp
-    (66) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
-    (69) stmt -> . PRINT LPAREN optargs RPAREN
-    (70) stmt -> . RETURN exp
+    (65) stmt -> . BREAK
+    (66) stmt -> . CONTINUE
+    (67) stmt -> . DO stmtblock WHILE exp
+    (68) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
+    (71) stmt -> . PRINT LPAREN optargs RPAREN
+    (72) stmt -> . RETURN exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -312,25 +322,27 @@ state 2
     STRUCT          shift and go to state 8
     MAKE            shift and go to state 9
     IF              shift and go to state 12
-    DO              shift and go to state 13
-    FOR             shift and go to state 14
-    PRINT           shift and go to state 15
-    RETURN          shift and go to state 16
-    CALL            shift and go to state 17
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    BREAK           shift and go to state 13
+    CONTINUE        shift and go to state 14
+    DO              shift and go to state 15
+    FOR             shift and go to state 16
+    PRINT           shift and go to state 17
+    RETURN          shift and go to state 18
+    CALL            shift and go to state 19
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
     line                           shift and go to state 2
-    uz                             shift and go to state 26
+    uz                             shift and go to state 28
     stmt                           shift and go to state 4
     exp                            shift and go to state 7
 
@@ -338,14 +350,14 @@ state 3
 
     (3) uz -> error . SEMICOL
 
-    SEMICOL         shift and go to state 27
+    SEMICOL         shift and go to state 29
 
 
 state 4
 
     (2) line -> stmt . SEMICOL
 
-    SEMICOL         shift and go to state 28
+    SEMICOL         shift and go to state 30
 
 
 state 5
@@ -359,8 +371,8 @@ state 5
     (29) exp -> NAME .
     (42) exp -> NAME . DOT NAME
 
-    DOT             shift and go to state 29
-    EQUAL           shift and go to state 30
+    DOT             shift and go to state 31
+    EQUAL           shift and go to state 32
     DEC             reduce using rule 29 (exp -> NAME .)
     INC             reduce using rule 29 (exp -> NAME .)
     PLUS            reduce using rule 29 (exp -> NAME .)
@@ -412,21 +424,21 @@ state 6
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 31
+    exp                            shift and go to state 33
 
 state 7
 
@@ -447,29 +459,29 @@ state 7
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    DEC             shift and go to state 33
-    INC             shift and go to state 34
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    DEC             shift and go to state 35
+    INC             shift and go to state 36
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
 state 8
 
     (35) stmt -> STRUCT . NAME SEP structargs SEP
 
-    NAME            shift and go to state 49
+    NAME            shift and go to state 51
 
 
 state 9
@@ -479,7 +491,7 @@ state 9
     (58) stmt -> MAKE . NAME EQUAL exp
     (59) stmt -> MAKE . NAME EQUAL list
 
-    NAME            shift and go to state 50
+    NAME            shift and go to state 52
 
 
 state 10
@@ -515,21 +527,21 @@ state 10
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 51
+    exp                            shift and go to state 53
 
 state 11
 
@@ -564,21 +576,21 @@ state 11
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 52
+    exp                            shift and go to state 54
 
 state 12
 
@@ -614,49 +626,63 @@ state 12
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 53
+    exp                            shift and go to state 55
 
 state 13
 
-    (65) stmt -> DO . stmtblock WHILE exp
-    (5) stmtblock -> . LBRACE stmtS RBRACE
-    (6) stmtblock -> . LBRACE error RBRACE
+    (65) stmt -> BREAK .
 
-    LBRACE          shift and go to state 55
+    SEMICOL         reduce using rule 65 (stmt -> BREAK .)
 
-    stmtblock                      shift and go to state 54
 
 state 14
 
-    (66) stmt -> FOR . NAME EQUAL exp TO exp UNTIL step stmtblock
+    (66) stmt -> CONTINUE .
 
-    NAME            shift and go to state 56
+    SEMICOL         reduce using rule 66 (stmt -> CONTINUE .)
 
 
 state 15
 
-    (69) stmt -> PRINT . LPAREN optargs RPAREN
+    (67) stmt -> DO . stmtblock WHILE exp
+    (5) stmtblock -> . LBRACE stmtS RBRACE
+    (6) stmtblock -> . LBRACE error RBRACE
 
-    LPAREN          shift and go to state 57
+    LBRACE          shift and go to state 57
 
+    stmtblock                      shift and go to state 56
 
 state 16
 
-    (70) stmt -> RETURN . exp
+    (68) stmt -> FOR . NAME EQUAL exp TO exp UNTIL step stmtblock
+
+    NAME            shift and go to state 58
+
+
+state 17
+
+    (71) stmt -> PRINT . LPAREN optargs RPAREN
+
+    LPAREN          shift and go to state 59
+
+
+state 18
+
+    (72) stmt -> RETURN . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -687,39 +713,39 @@ state 16
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 58
+    exp                            shift and go to state 60
 
-state 17
+state 19
 
     (10) exp -> CALL . NAME LPAREN optargs RPAREN
 
-    NAME            shift and go to state 59
+    NAME            shift and go to state 61
 
 
-state 18
+state 20
 
     (43) exp -> MINUS . INT
     (44) exp -> MINUS . FLOAT
 
-    INT             shift and go to state 60
-    FLOAT           shift and go to state 61
+    INT             shift and go to state 62
+    FLOAT           shift and go to state 63
 
 
-state 19
+state 21
 
     (45) exp -> INT .
 
@@ -750,7 +776,7 @@ state 19
     LBRACE          reduce using rule 45 (exp -> INT .)
 
 
-state 20
+state 22
 
     (46) exp -> FLOAT .
 
@@ -781,7 +807,7 @@ state 20
     LBRACE          reduce using rule 46 (exp -> FLOAT .)
 
 
-state 21
+state 23
 
     (51) exp -> NOT . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -814,23 +840,23 @@ state 21
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 62
+    exp                            shift and go to state 64
 
-state 22
+state 24
 
     (52) exp -> TRUE .
 
@@ -861,7 +887,7 @@ state 22
     LBRACE          reduce using rule 52 (exp -> TRUE .)
 
 
-state 23
+state 25
 
     (53) exp -> FALSE .
 
@@ -892,7 +918,7 @@ state 23
     LBRACE          reduce using rule 53 (exp -> FALSE .)
 
 
-state 24
+state 26
 
     (54) exp -> STRING .
 
@@ -923,7 +949,7 @@ state 24
     LBRACE          reduce using rule 54 (exp -> STRING .)
 
 
-state 25
+state 27
 
     (55) exp -> CHAR .
 
@@ -954,21 +980,21 @@ state 25
     LBRACE          reduce using rule 55 (exp -> CHAR .)
 
 
-state 26
+state 28
 
     (1) uz -> line uz .
 
     $end            reduce using rule 1 (uz -> line uz .)
 
 
-state 27
+state 29
 
     (3) uz -> error SEMICOL .
 
     $end            reduce using rule 3 (uz -> error SEMICOL .)
 
 
-state 28
+state 30
 
     (2) line -> stmt SEMICOL .
 
@@ -977,6 +1003,8 @@ state 28
     STRUCT          reduce using rule 2 (line -> stmt SEMICOL .)
     MAKE            reduce using rule 2 (line -> stmt SEMICOL .)
     IF              reduce using rule 2 (line -> stmt SEMICOL .)
+    BREAK           reduce using rule 2 (line -> stmt SEMICOL .)
+    CONTINUE        reduce using rule 2 (line -> stmt SEMICOL .)
     DO              reduce using rule 2 (line -> stmt SEMICOL .)
     FOR             reduce using rule 2 (line -> stmt SEMICOL .)
     PRINT           reduce using rule 2 (line -> stmt SEMICOL .)
@@ -996,7 +1024,7 @@ state 28
     $end            reduce using rule 2 (line -> stmt SEMICOL .)
 
 
-state 29
+state 31
 
     (31) stmt -> NAME DOT . POP LPAREN exp RPAREN
     (32) stmt -> NAME DOT . PUSH LPAREN exp RPAREN
@@ -1005,14 +1033,14 @@ state 29
     (41) stmt -> NAME DOT . NAME EQUAL exp
     (42) exp -> NAME DOT . NAME
 
-    POP             shift and go to state 64
-    PUSH            shift and go to state 65
-    INDEX           shift and go to state 66
-    SLICE           shift and go to state 67
-    NAME            shift and go to state 63
+    POP             shift and go to state 66
+    PUSH            shift and go to state 67
+    INDEX           shift and go to state 68
+    SLICE           shift and go to state 69
+    NAME            shift and go to state 65
 
 
-state 30
+state 32
 
     (60) stmt -> NAME EQUAL . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1045,23 +1073,23 @@ state 30
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 68
+    exp                            shift and go to state 70
 
-state 31
+state 33
 
     (56) exp -> LPAREN exp . RPAREN
     (15) exp -> exp . PLUS exp
@@ -1079,24 +1107,24 @@ state 31
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    RPAREN          shift and go to state 69
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    RPAREN          shift and go to state 71
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 32
+state 34
 
     (29) exp -> NAME .
     (42) exp -> NAME . DOT NAME
@@ -1126,24 +1154,24 @@ state 32
     SEP             reduce using rule 29 (exp -> NAME .)
     UNTIL           reduce using rule 29 (exp -> NAME .)
     LBRACE          reduce using rule 29 (exp -> NAME .)
-    DOT             shift and go to state 70
+    DOT             shift and go to state 72
 
 
-state 33
+state 35
 
     (49) stmt -> exp DEC .
 
     SEMICOL         reduce using rule 49 (stmt -> exp DEC .)
 
 
-state 34
+state 36
 
     (50) stmt -> exp INC .
 
     SEMICOL         reduce using rule 50 (stmt -> exp INC .)
 
 
-state 35
+state 37
 
     (15) exp -> exp PLUS . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1176,23 +1204,23 @@ state 35
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 71
+    exp                            shift and go to state 73
 
-state 36
+state 38
 
     (16) exp -> exp MINUS . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1225,23 +1253,23 @@ state 36
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 72
+    exp                            shift and go to state 74
 
-state 37
+state 39
 
     (17) exp -> exp MULTIPLY . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1274,23 +1302,23 @@ state 37
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 73
+    exp                            shift and go to state 75
 
-state 38
+state 40
 
     (18) exp -> exp DIVIDE . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1323,23 +1351,23 @@ state 38
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 74
+    exp                            shift and go to state 76
 
-state 39
+state 41
 
     (19) exp -> exp POWER . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1372,23 +1400,23 @@ state 39
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 75
+    exp                            shift and go to state 77
 
-state 40
+state 42
 
     (20) exp -> exp MODULUS . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1421,23 +1449,23 @@ state 40
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 76
+    exp                            shift and go to state 78
 
-state 41
+state 43
 
     (21) exp -> exp AND . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1470,23 +1498,23 @@ state 41
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 77
+    exp                            shift and go to state 79
 
-state 42
+state 44
 
     (22) exp -> exp OR . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1519,23 +1547,23 @@ state 42
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 78
+    exp                            shift and go to state 80
 
-state 43
+state 45
 
     (23) exp -> exp GT . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1568,23 +1596,23 @@ state 43
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 79
+    exp                            shift and go to state 81
 
-state 44
+state 46
 
     (24) exp -> exp LT . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1617,23 +1645,23 @@ state 44
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 80
+    exp                            shift and go to state 82
 
-state 45
+state 47
 
     (25) exp -> exp GTE . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1666,23 +1694,23 @@ state 45
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 81
+    exp                            shift and go to state 83
 
-state 46
+state 48
 
     (26) exp -> exp LTE . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1715,23 +1743,23 @@ state 46
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 82
+    exp                            shift and go to state 84
 
-state 47
+state 49
 
     (27) exp -> exp EE . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1764,23 +1792,23 @@ state 47
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 83
+    exp                            shift and go to state 85
 
-state 48
+state 50
 
     (28) exp -> exp NE . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -1813,42 +1841,42 @@ state 48
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 84
+    exp                            shift and go to state 86
 
-state 49
+state 51
 
     (35) stmt -> STRUCT NAME . SEP structargs SEP
 
-    SEP             shift and go to state 85
+    SEP             shift and go to state 87
 
 
-state 50
+state 52
 
     (40) stmt -> MAKE NAME . NAME
     (57) stmt -> MAKE NAME .
     (58) stmt -> MAKE NAME . EQUAL exp
     (59) stmt -> MAKE NAME . EQUAL list
 
-    NAME            shift and go to state 86
+    NAME            shift and go to state 88
     SEMICOL         reduce using rule 57 (stmt -> MAKE NAME .)
-    EQUAL           shift and go to state 87
+    EQUAL           shift and go to state 89
 
 
-state 51
+state 53
 
     (47) exp -> DEC exp .
     (15) exp -> exp . PLUS exp
@@ -1879,18 +1907,18 @@ state 51
     SEP             reduce using rule 47 (exp -> DEC exp .)
     UNTIL           reduce using rule 47 (exp -> DEC exp .)
     LBRACE          reduce using rule 47 (exp -> DEC exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
   ! PLUS            [ reduce using rule 47 (exp -> DEC exp .) ]
   ! MINUS           [ reduce using rule 47 (exp -> DEC exp .) ]
@@ -1904,11 +1932,11 @@ state 51
   ! LTE             [ reduce using rule 47 (exp -> DEC exp .) ]
   ! EE              [ reduce using rule 47 (exp -> DEC exp .) ]
   ! NE              [ reduce using rule 47 (exp -> DEC exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
 
 
-state 52
+state 54
 
     (48) exp -> INC exp .
     (15) exp -> exp . PLUS exp
@@ -1939,18 +1967,18 @@ state 52
     SEP             reduce using rule 48 (exp -> INC exp .)
     UNTIL           reduce using rule 48 (exp -> INC exp .)
     LBRACE          reduce using rule 48 (exp -> INC exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
   ! PLUS            [ reduce using rule 48 (exp -> INC exp .) ]
   ! MINUS           [ reduce using rule 48 (exp -> INC exp .) ]
@@ -1964,11 +1992,11 @@ state 52
   ! LTE             [ reduce using rule 48 (exp -> INC exp .) ]
   ! EE              [ reduce using rule 48 (exp -> INC exp .) ]
   ! NE              [ reduce using rule 48 (exp -> INC exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
 
 
-state 53
+state 55
 
     (61) stmt -> IF exp . THEN stmtblock
     (62) stmt -> IF exp . THEN stmtblock elsif ELSE THEN stmtblock
@@ -1987,31 +2015,31 @@ state 53
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    THEN            shift and go to state 88
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    THEN            shift and go to state 90
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 54
+state 56
 
-    (65) stmt -> DO stmtblock . WHILE exp
+    (67) stmt -> DO stmtblock . WHILE exp
 
-    WHILE           shift and go to state 89
+    WHILE           shift and go to state 91
 
 
-state 55
+state 57
 
     (5) stmtblock -> LBRACE . stmtS RBRACE
     (6) stmtblock -> LBRACE . error RBRACE
@@ -2033,10 +2061,12 @@ state 55
     (60) stmt -> . NAME EQUAL exp
     (61) stmt -> . IF exp THEN stmtblock
     (62) stmt -> . IF exp THEN stmtblock elsif ELSE THEN stmtblock
-    (65) stmt -> . DO stmtblock WHILE exp
-    (66) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
-    (69) stmt -> . PRINT LPAREN optargs RPAREN
-    (70) stmt -> . RETURN exp
+    (65) stmt -> . BREAK
+    (66) stmt -> . CONTINUE
+    (67) stmt -> . DO stmtblock WHILE exp
+    (68) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
+    (71) stmt -> . PRINT LPAREN optargs RPAREN
+    (72) stmt -> . RETURN exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -2067,43 +2097,45 @@ state 55
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    error           shift and go to state 91
+    error           shift and go to state 93
     RBRACE          reduce using rule 9 (stmtS -> .)
     NAME            shift and go to state 5
     STRUCT          shift and go to state 8
     MAKE            shift and go to state 9
     IF              shift and go to state 12
-    DO              shift and go to state 13
-    FOR             shift and go to state 14
-    PRINT           shift and go to state 15
-    RETURN          shift and go to state 16
-    CALL            shift and go to state 17
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    BREAK           shift and go to state 13
+    CONTINUE        shift and go to state 14
+    DO              shift and go to state 15
+    FOR             shift and go to state 16
+    PRINT           shift and go to state 17
+    RETURN          shift and go to state 18
+    CALL            shift and go to state 19
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    stmtS                          shift and go to state 90
-    stmt                           shift and go to state 92
+    stmtS                          shift and go to state 92
+    stmt                           shift and go to state 94
     exp                            shift and go to state 7
 
-state 56
+state 58
 
-    (66) stmt -> FOR NAME . EQUAL exp TO exp UNTIL step stmtblock
+    (68) stmt -> FOR NAME . EQUAL exp TO exp UNTIL step stmtblock
 
-    EQUAL           shift and go to state 93
+    EQUAL           shift and go to state 95
 
 
-state 57
+state 59
 
-    (69) stmt -> PRINT LPAREN . optargs RPAREN
+    (71) stmt -> PRINT LPAREN . optargs RPAREN
     (11) optargs -> . args
     (12) optargs -> .
     (13) args -> . exp COMMA args
@@ -2139,27 +2171,27 @@ state 57
     (56) exp -> . LPAREN exp RPAREN
 
     RPAREN          reduce using rule 12 (optargs -> .)
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    optargs                        shift and go to state 94
-    args                           shift and go to state 95
-    exp                            shift and go to state 96
+    optargs                        shift and go to state 96
+    args                           shift and go to state 97
+    exp                            shift and go to state 98
 
-state 58
+state 60
 
-    (70) stmt -> RETURN exp .
+    (72) stmt -> RETURN exp .
     (15) exp -> exp . PLUS exp
     (16) exp -> exp . MINUS exp
     (17) exp -> exp . MULTIPLY exp
@@ -2175,31 +2207,31 @@ state 58
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    SEMICOL         reduce using rule 70 (stmt -> RETURN exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    SEMICOL         reduce using rule 72 (stmt -> RETURN exp .)
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 59
+state 61
 
     (10) exp -> CALL NAME . LPAREN optargs RPAREN
 
-    LPAREN          shift and go to state 97
+    LPAREN          shift and go to state 99
 
 
-state 60
+state 62
 
     (43) exp -> MINUS INT .
 
@@ -2230,7 +2262,7 @@ state 60
     LBRACE          reduce using rule 43 (exp -> MINUS INT .)
 
 
-state 61
+state 63
 
     (44) exp -> MINUS FLOAT .
 
@@ -2261,7 +2293,7 @@ state 61
     LBRACE          reduce using rule 44 (exp -> MINUS FLOAT .)
 
 
-state 62
+state 64
 
     (51) exp -> NOT exp .
     (15) exp -> exp . PLUS exp
@@ -2305,28 +2337,28 @@ state 62
     UNTIL           reduce using rule 51 (exp -> NOT exp .)
     LBRACE          reduce using rule 51 (exp -> NOT exp .)
 
-  ! PLUS            [ shift and go to state 35 ]
-  ! MINUS           [ shift and go to state 36 ]
-  ! MULTIPLY        [ shift and go to state 37 ]
-  ! DIVIDE          [ shift and go to state 38 ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! PLUS            [ shift and go to state 37 ]
+  ! MINUS           [ shift and go to state 38 ]
+  ! MULTIPLY        [ shift and go to state 39 ]
+  ! DIVIDE          [ shift and go to state 40 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 63
+state 65
 
     (41) stmt -> NAME DOT NAME . EQUAL exp
     (42) exp -> NAME DOT NAME .
 
-    EQUAL           shift and go to state 98
+    EQUAL           shift and go to state 100
     DEC             reduce using rule 42 (exp -> NAME DOT NAME .)
     INC             reduce using rule 42 (exp -> NAME DOT NAME .)
     PLUS            reduce using rule 42 (exp -> NAME DOT NAME .)
@@ -2345,35 +2377,35 @@ state 63
     NE              reduce using rule 42 (exp -> NAME DOT NAME .)
 
 
-state 64
-
-    (31) stmt -> NAME DOT POP . LPAREN exp RPAREN
-
-    LPAREN          shift and go to state 99
-
-
-state 65
-
-    (32) stmt -> NAME DOT PUSH . LPAREN exp RPAREN
-
-    LPAREN          shift and go to state 100
-
-
 state 66
 
-    (33) stmt -> NAME DOT INDEX . LPAREN exp RPAREN
+    (31) stmt -> NAME DOT POP . LPAREN exp RPAREN
 
     LPAREN          shift and go to state 101
 
 
 state 67
 
-    (34) stmt -> NAME DOT SLICE . LPAREN exp COMMA exp RPAREN
+    (32) stmt -> NAME DOT PUSH . LPAREN exp RPAREN
 
     LPAREN          shift and go to state 102
 
 
 state 68
+
+    (33) stmt -> NAME DOT INDEX . LPAREN exp RPAREN
+
+    LPAREN          shift and go to state 103
+
+
+state 69
+
+    (34) stmt -> NAME DOT SLICE . LPAREN exp COMMA exp RPAREN
+
+    LPAREN          shift and go to state 104
+
+
+state 70
 
     (60) stmt -> NAME EQUAL exp .
     (15) exp -> exp . PLUS exp
@@ -2392,23 +2424,23 @@ state 68
     (28) exp -> exp . NE exp
 
     SEMICOL         reduce using rule 60 (stmt -> NAME EQUAL exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 69
+state 71
 
     (56) exp -> LPAREN exp RPAREN .
 
@@ -2439,14 +2471,14 @@ state 69
     LBRACE          reduce using rule 56 (exp -> LPAREN exp RPAREN .)
 
 
-state 70
+state 72
 
     (42) exp -> NAME DOT . NAME
 
-    NAME            shift and go to state 103
+    NAME            shift and go to state 105
 
 
-state 71
+state 73
 
     (15) exp -> exp PLUS exp .
     (15) exp -> exp . PLUS exp
@@ -2487,26 +2519,26 @@ state 71
     SEP             reduce using rule 15 (exp -> exp PLUS exp .)
     UNTIL           reduce using rule 15 (exp -> exp PLUS exp .)
     LBRACE          reduce using rule 15 (exp -> exp PLUS exp .)
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
 
   ! MULTIPLY        [ reduce using rule 15 (exp -> exp PLUS exp .) ]
   ! DIVIDE          [ reduce using rule 15 (exp -> exp PLUS exp .) ]
-  ! PLUS            [ shift and go to state 35 ]
-  ! MINUS           [ shift and go to state 36 ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! PLUS            [ shift and go to state 37 ]
+  ! MINUS           [ shift and go to state 38 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 72
+state 74
 
     (16) exp -> exp MINUS exp .
     (15) exp -> exp . PLUS exp
@@ -2547,26 +2579,26 @@ state 72
     SEP             reduce using rule 16 (exp -> exp MINUS exp .)
     UNTIL           reduce using rule 16 (exp -> exp MINUS exp .)
     LBRACE          reduce using rule 16 (exp -> exp MINUS exp .)
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
 
   ! MULTIPLY        [ reduce using rule 16 (exp -> exp MINUS exp .) ]
   ! DIVIDE          [ reduce using rule 16 (exp -> exp MINUS exp .) ]
-  ! PLUS            [ shift and go to state 35 ]
-  ! MINUS           [ shift and go to state 36 ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! PLUS            [ shift and go to state 37 ]
+  ! MINUS           [ shift and go to state 38 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 73
+state 75
 
     (17) exp -> exp MULTIPLY exp .
     (15) exp -> exp . PLUS exp
@@ -2610,23 +2642,23 @@ state 73
     UNTIL           reduce using rule 17 (exp -> exp MULTIPLY exp .)
     LBRACE          reduce using rule 17 (exp -> exp MULTIPLY exp .)
 
-  ! PLUS            [ shift and go to state 35 ]
-  ! MINUS           [ shift and go to state 36 ]
-  ! MULTIPLY        [ shift and go to state 37 ]
-  ! DIVIDE          [ shift and go to state 38 ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! PLUS            [ shift and go to state 37 ]
+  ! MINUS           [ shift and go to state 38 ]
+  ! MULTIPLY        [ shift and go to state 39 ]
+  ! DIVIDE          [ shift and go to state 40 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 74
+state 76
 
     (18) exp -> exp DIVIDE exp .
     (15) exp -> exp . PLUS exp
@@ -2670,23 +2702,23 @@ state 74
     UNTIL           reduce using rule 18 (exp -> exp DIVIDE exp .)
     LBRACE          reduce using rule 18 (exp -> exp DIVIDE exp .)
 
-  ! PLUS            [ shift and go to state 35 ]
-  ! MINUS           [ shift and go to state 36 ]
-  ! MULTIPLY        [ shift and go to state 37 ]
-  ! DIVIDE          [ shift and go to state 38 ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! PLUS            [ shift and go to state 37 ]
+  ! MINUS           [ shift and go to state 38 ]
+  ! MULTIPLY        [ shift and go to state 39 ]
+  ! DIVIDE          [ shift and go to state 40 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 75
+state 77
 
     (19) exp -> exp POWER exp .
     (15) exp -> exp . PLUS exp
@@ -2729,20 +2761,20 @@ state 75
     SEP             reduce using rule 19 (exp -> exp POWER exp .)
     UNTIL           reduce using rule 19 (exp -> exp POWER exp .)
     LBRACE          reduce using rule 19 (exp -> exp POWER exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
   ! PLUS            [ reduce using rule 19 (exp -> exp POWER exp .) ]
   ! MINUS           [ reduce using rule 19 (exp -> exp POWER exp .) ]
@@ -2760,7 +2792,7 @@ state 75
   ! NE              [ reduce using rule 19 (exp -> exp POWER exp .) ]
 
 
-state 76
+state 78
 
     (20) exp -> exp MODULUS exp .
     (15) exp -> exp . PLUS exp
@@ -2803,20 +2835,20 @@ state 76
     SEP             reduce using rule 20 (exp -> exp MODULUS exp .)
     UNTIL           reduce using rule 20 (exp -> exp MODULUS exp .)
     LBRACE          reduce using rule 20 (exp -> exp MODULUS exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
   ! PLUS            [ reduce using rule 20 (exp -> exp MODULUS exp .) ]
   ! MINUS           [ reduce using rule 20 (exp -> exp MODULUS exp .) ]
@@ -2834,7 +2866,7 @@ state 76
   ! NE              [ reduce using rule 20 (exp -> exp MODULUS exp .) ]
 
 
-state 77
+state 79
 
     (21) exp -> exp AND exp .
     (15) exp -> exp . PLUS exp
@@ -2867,16 +2899,16 @@ state 77
     SEP             reduce using rule 21 (exp -> exp AND exp .)
     UNTIL           reduce using rule 21 (exp -> exp AND exp .)
     LBRACE          reduce using rule 21 (exp -> exp AND exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
   ! PLUS            [ reduce using rule 21 (exp -> exp AND exp .) ]
   ! MINUS           [ reduce using rule 21 (exp -> exp AND exp .) ]
@@ -2888,13 +2920,13 @@ state 77
   ! LTE             [ reduce using rule 21 (exp -> exp AND exp .) ]
   ! EE              [ reduce using rule 21 (exp -> exp AND exp .) ]
   ! NE              [ reduce using rule 21 (exp -> exp AND exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
 
 
-state 78
+state 80
 
     (22) exp -> exp OR exp .
     (15) exp -> exp . PLUS exp
@@ -2926,17 +2958,17 @@ state 78
     SEP             reduce using rule 22 (exp -> exp OR exp .)
     UNTIL           reduce using rule 22 (exp -> exp OR exp .)
     LBRACE          reduce using rule 22 (exp -> exp OR exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    AND             shift and go to state 41
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    AND             shift and go to state 43
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
   ! PLUS            [ reduce using rule 22 (exp -> exp OR exp .) ]
   ! MINUS           [ reduce using rule 22 (exp -> exp OR exp .) ]
@@ -2949,12 +2981,12 @@ state 78
   ! LTE             [ reduce using rule 22 (exp -> exp OR exp .) ]
   ! EE              [ reduce using rule 22 (exp -> exp OR exp .) ]
   ! NE              [ reduce using rule 22 (exp -> exp OR exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! OR              [ shift and go to state 42 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! OR              [ shift and go to state 44 ]
 
 
-state 79
+state 81
 
     (23) exp -> exp GT exp .
     (15) exp -> exp . PLUS exp
@@ -2993,28 +3025,28 @@ state 79
     SEP             reduce using rule 23 (exp -> exp GT exp .)
     UNTIL           reduce using rule 23 (exp -> exp GT exp .)
     LBRACE          reduce using rule 23 (exp -> exp GT exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
 
   ! PLUS            [ reduce using rule 23 (exp -> exp GT exp .) ]
   ! MINUS           [ reduce using rule 23 (exp -> exp GT exp .) ]
   ! MULTIPLY        [ reduce using rule 23 (exp -> exp GT exp .) ]
   ! DIVIDE          [ reduce using rule 23 (exp -> exp GT exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 80
+state 82
 
     (24) exp -> exp LT exp .
     (15) exp -> exp . PLUS exp
@@ -3053,28 +3085,28 @@ state 80
     SEP             reduce using rule 24 (exp -> exp LT exp .)
     UNTIL           reduce using rule 24 (exp -> exp LT exp .)
     LBRACE          reduce using rule 24 (exp -> exp LT exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
 
   ! PLUS            [ reduce using rule 24 (exp -> exp LT exp .) ]
   ! MINUS           [ reduce using rule 24 (exp -> exp LT exp .) ]
   ! MULTIPLY        [ reduce using rule 24 (exp -> exp LT exp .) ]
   ! DIVIDE          [ reduce using rule 24 (exp -> exp LT exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 81
+state 83
 
     (25) exp -> exp GTE exp .
     (15) exp -> exp . PLUS exp
@@ -3113,28 +3145,28 @@ state 81
     SEP             reduce using rule 25 (exp -> exp GTE exp .)
     UNTIL           reduce using rule 25 (exp -> exp GTE exp .)
     LBRACE          reduce using rule 25 (exp -> exp GTE exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
 
   ! PLUS            [ reduce using rule 25 (exp -> exp GTE exp .) ]
   ! MINUS           [ reduce using rule 25 (exp -> exp GTE exp .) ]
   ! MULTIPLY        [ reduce using rule 25 (exp -> exp GTE exp .) ]
   ! DIVIDE          [ reduce using rule 25 (exp -> exp GTE exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 82
+state 84
 
     (26) exp -> exp LTE exp .
     (15) exp -> exp . PLUS exp
@@ -3173,28 +3205,28 @@ state 82
     SEP             reduce using rule 26 (exp -> exp LTE exp .)
     UNTIL           reduce using rule 26 (exp -> exp LTE exp .)
     LBRACE          reduce using rule 26 (exp -> exp LTE exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
 
   ! PLUS            [ reduce using rule 26 (exp -> exp LTE exp .) ]
   ! MINUS           [ reduce using rule 26 (exp -> exp LTE exp .) ]
   ! MULTIPLY        [ reduce using rule 26 (exp -> exp LTE exp .) ]
   ! DIVIDE          [ reduce using rule 26 (exp -> exp LTE exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! GT              [ shift and go to state 43 ]
-  ! LT              [ shift and go to state 44 ]
-  ! GTE             [ shift and go to state 45 ]
-  ! LTE             [ shift and go to state 46 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! GT              [ shift and go to state 45 ]
+  ! LT              [ shift and go to state 46 ]
+  ! GTE             [ shift and go to state 47 ]
+  ! LTE             [ shift and go to state 48 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 83
+state 85
 
     (27) exp -> exp EE exp .
     (15) exp -> exp . PLUS exp
@@ -3229,14 +3261,14 @@ state 83
     SEP             reduce using rule 27 (exp -> exp EE exp .)
     UNTIL           reduce using rule 27 (exp -> exp EE exp .)
     LBRACE          reduce using rule 27 (exp -> exp EE exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
 
   ! PLUS            [ reduce using rule 27 (exp -> exp EE exp .) ]
   ! MINUS           [ reduce using rule 27 (exp -> exp EE exp .) ]
@@ -3246,15 +3278,15 @@ state 83
   ! LT              [ reduce using rule 27 (exp -> exp EE exp .) ]
   ! GTE             [ reduce using rule 27 (exp -> exp EE exp .) ]
   ! LTE             [ reduce using rule 27 (exp -> exp EE exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 84
+state 86
 
     (28) exp -> exp NE exp .
     (15) exp -> exp . PLUS exp
@@ -3289,14 +3321,14 @@ state 84
     SEP             reduce using rule 28 (exp -> exp NE exp .)
     UNTIL           reduce using rule 28 (exp -> exp NE exp .)
     LBRACE          reduce using rule 28 (exp -> exp NE exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
 
   ! PLUS            [ reduce using rule 28 (exp -> exp NE exp .) ]
   ! MINUS           [ reduce using rule 28 (exp -> exp NE exp .) ]
@@ -3306,35 +3338,35 @@ state 84
   ! LT              [ reduce using rule 28 (exp -> exp NE exp .) ]
   ! GTE             [ reduce using rule 28 (exp -> exp NE exp .) ]
   ! LTE             [ reduce using rule 28 (exp -> exp NE exp .) ]
-  ! POWER           [ shift and go to state 39 ]
-  ! MODULUS         [ shift and go to state 40 ]
-  ! AND             [ shift and go to state 41 ]
-  ! OR              [ shift and go to state 42 ]
-  ! EE              [ shift and go to state 47 ]
-  ! NE              [ shift and go to state 48 ]
+  ! POWER           [ shift and go to state 41 ]
+  ! MODULUS         [ shift and go to state 42 ]
+  ! AND             [ shift and go to state 43 ]
+  ! OR              [ shift and go to state 44 ]
+  ! EE              [ shift and go to state 49 ]
+  ! NE              [ shift and go to state 50 ]
 
 
-state 85
+state 87
 
     (35) stmt -> STRUCT NAME SEP . structargs SEP
-    (36) structargs -> . structexp COMMA structexp
+    (36) structargs -> . structexp COMMA structargs
     (37) structargs -> . structexp
     (38) structexp -> . NAME
     (39) structexp -> . NAME EQUAL exp
 
-    NAME            shift and go to state 104
+    NAME            shift and go to state 106
 
-    structargs                     shift and go to state 105
-    structexp                      shift and go to state 106
+    structargs                     shift and go to state 107
+    structexp                      shift and go to state 108
 
-state 86
+state 88
 
     (40) stmt -> MAKE NAME NAME .
 
     SEMICOL         reduce using rule 40 (stmt -> MAKE NAME NAME .)
 
 
-state 87
+state 89
 
     (58) stmt -> MAKE NAME EQUAL . exp
     (59) stmt -> MAKE NAME EQUAL . list
@@ -3369,38 +3401,38 @@ state 87
     (56) exp -> . LPAREN exp RPAREN
     (30) list -> . LBRACK optargs RBRACK
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
-    LBRACK          shift and go to state 109
+    LBRACK          shift and go to state 111
 
-    exp                            shift and go to state 107
-    list                           shift and go to state 108
+    exp                            shift and go to state 109
+    list                           shift and go to state 110
 
-state 88
+state 90
 
     (61) stmt -> IF exp THEN . stmtblock
     (62) stmt -> IF exp THEN . stmtblock elsif ELSE THEN stmtblock
     (5) stmtblock -> . LBRACE stmtS RBRACE
     (6) stmtblock -> . LBRACE error RBRACE
 
-    LBRACE          shift and go to state 55
+    LBRACE          shift and go to state 57
 
-    stmtblock                      shift and go to state 110
+    stmtblock                      shift and go to state 112
 
-state 89
+state 91
 
-    (65) stmt -> DO stmtblock WHILE . exp
+    (67) stmt -> DO stmtblock WHILE . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -3431,48 +3463,48 @@ state 89
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 111
-
-state 90
-
-    (5) stmtblock -> LBRACE stmtS . RBRACE
-
-    RBRACE          shift and go to state 112
-
-
-state 91
-
-    (6) stmtblock -> LBRACE error . RBRACE
-    (8) stmtS -> error . SEMICOL stmtS
-
-    RBRACE          shift and go to state 113
-    SEMICOL         shift and go to state 114
-
+    exp                            shift and go to state 113
 
 state 92
 
-    (7) stmtS -> stmt . SEMICOL stmtS
+    (5) stmtblock -> LBRACE stmtS . RBRACE
 
-    SEMICOL         shift and go to state 115
+    RBRACE          shift and go to state 114
 
 
 state 93
 
-    (66) stmt -> FOR NAME EQUAL . exp TO exp UNTIL step stmtblock
+    (6) stmtblock -> LBRACE error . RBRACE
+    (8) stmtS -> error . SEMICOL stmtS
+
+    RBRACE          shift and go to state 115
+    SEMICOL         shift and go to state 116
+
+
+state 94
+
+    (7) stmtS -> stmt . SEMICOL stmtS
+
+    SEMICOL         shift and go to state 117
+
+
+state 95
+
+    (68) stmt -> FOR NAME EQUAL . exp TO exp UNTIL step stmtblock
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -3503,30 +3535,30 @@ state 93
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 116
+    exp                            shift and go to state 118
 
-state 94
+state 96
 
-    (69) stmt -> PRINT LPAREN optargs . RPAREN
+    (71) stmt -> PRINT LPAREN optargs . RPAREN
 
-    RPAREN          shift and go to state 117
+    RPAREN          shift and go to state 119
 
 
-state 95
+state 97
 
     (11) optargs -> args .
 
@@ -3534,7 +3566,7 @@ state 95
     RBRACK          reduce using rule 11 (optargs -> args .)
 
 
-state 96
+state 98
 
     (13) args -> exp . COMMA args
     (14) args -> exp .
@@ -3553,26 +3585,26 @@ state 96
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    COMMA           shift and go to state 118
+    COMMA           shift and go to state 120
     RPAREN          reduce using rule 14 (args -> exp .)
     RBRACK          reduce using rule 14 (args -> exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 97
+state 99
 
     (10) exp -> CALL NAME LPAREN . optargs RPAREN
     (11) optargs -> . args
@@ -3610,25 +3642,25 @@ state 97
     (56) exp -> . LPAREN exp RPAREN
 
     RPAREN          reduce using rule 12 (optargs -> .)
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    optargs                        shift and go to state 119
-    args                           shift and go to state 95
-    exp                            shift and go to state 96
+    optargs                        shift and go to state 121
+    args                           shift and go to state 97
+    exp                            shift and go to state 98
 
-state 98
+state 100
 
     (41) stmt -> NAME DOT NAME EQUAL . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -3661,23 +3693,23 @@ state 98
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 120
+    exp                            shift and go to state 122
 
-state 99
+state 101
 
     (31) stmt -> NAME DOT POP LPAREN . exp RPAREN
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -3710,23 +3742,23 @@ state 99
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 121
+    exp                            shift and go to state 123
 
-state 100
+state 102
 
     (32) stmt -> NAME DOT PUSH LPAREN . exp RPAREN
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -3759,23 +3791,23 @@ state 100
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 122
+    exp                            shift and go to state 124
 
-state 101
+state 103
 
     (33) stmt -> NAME DOT INDEX LPAREN . exp RPAREN
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -3808,23 +3840,23 @@ state 101
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 123
+    exp                            shift and go to state 125
 
-state 102
+state 104
 
     (34) stmt -> NAME DOT SLICE LPAREN . exp COMMA exp RPAREN
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -3857,23 +3889,23 @@ state 102
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 124
+    exp                            shift and go to state 126
 
-state 103
+state 105
 
     (42) exp -> NAME DOT NAME .
 
@@ -3904,33 +3936,33 @@ state 103
     LBRACE          reduce using rule 42 (exp -> NAME DOT NAME .)
 
 
-state 104
+state 106
 
     (38) structexp -> NAME .
     (39) structexp -> NAME . EQUAL exp
 
     COMMA           reduce using rule 38 (structexp -> NAME .)
     SEP             reduce using rule 38 (structexp -> NAME .)
-    EQUAL           shift and go to state 125
-
-
-state 105
-
-    (35) stmt -> STRUCT NAME SEP structargs . SEP
-
-    SEP             shift and go to state 126
-
-
-state 106
-
-    (36) structargs -> structexp . COMMA structexp
-    (37) structargs -> structexp .
-
-    COMMA           shift and go to state 127
-    SEP             reduce using rule 37 (structargs -> structexp .)
+    EQUAL           shift and go to state 127
 
 
 state 107
+
+    (35) stmt -> STRUCT NAME SEP structargs . SEP
+
+    SEP             shift and go to state 128
+
+
+state 108
+
+    (36) structargs -> structexp . COMMA structargs
+    (37) structargs -> structexp .
+
+    COMMA           shift and go to state 129
+    SEP             reduce using rule 37 (structargs -> structexp .)
+
+
+state 109
 
     (58) stmt -> MAKE NAME EQUAL exp .
     (15) exp -> exp . PLUS exp
@@ -3949,30 +3981,30 @@ state 107
     (28) exp -> exp . NE exp
 
     SEMICOL         reduce using rule 58 (stmt -> MAKE NAME EQUAL exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 108
+state 110
 
     (59) stmt -> MAKE NAME EQUAL list .
 
     SEMICOL         reduce using rule 59 (stmt -> MAKE NAME EQUAL list .)
 
 
-state 109
+state 111
 
     (30) list -> LBRACK . optargs RBRACK
     (11) optargs -> . args
@@ -4010,25 +4042,25 @@ state 109
     (56) exp -> . LPAREN exp RPAREN
 
     RBRACK          reduce using rule 12 (optargs -> .)
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    optargs                        shift and go to state 128
-    args                           shift and go to state 95
-    exp                            shift and go to state 96
+    optargs                        shift and go to state 130
+    args                           shift and go to state 97
+    exp                            shift and go to state 98
 
-state 110
+state 112
 
     (61) stmt -> IF exp THEN stmtblock .
     (62) stmt -> IF exp THEN stmtblock . elsif ELSE THEN stmtblock
@@ -4036,14 +4068,14 @@ state 110
     (64) elsif -> .
 
     SEMICOL         reduce using rule 61 (stmt -> IF exp THEN stmtblock .)
-    ELIF            shift and go to state 130
+    ELIF            shift and go to state 132
     ELSE            reduce using rule 64 (elsif -> .)
 
-    elsif                          shift and go to state 129
+    elsif                          shift and go to state 131
 
-state 111
+state 113
 
-    (65) stmt -> DO stmtblock WHILE exp .
+    (67) stmt -> DO stmtblock WHILE exp .
     (15) exp -> exp . PLUS exp
     (16) exp -> exp . MINUS exp
     (17) exp -> exp . MULTIPLY exp
@@ -4059,24 +4091,24 @@ state 111
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    SEMICOL         reduce using rule 65 (stmt -> DO stmtblock WHILE exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    SEMICOL         reduce using rule 67 (stmt -> DO stmtblock WHILE exp .)
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 112
+state 114
 
     (5) stmtblock -> LBRACE stmtS RBRACE .
 
@@ -4086,7 +4118,7 @@ state 112
     SEMICOL         reduce using rule 5 (stmtblock -> LBRACE stmtS RBRACE .)
 
 
-state 113
+state 115
 
     (6) stmtblock -> LBRACE error RBRACE .
 
@@ -4096,7 +4128,7 @@ state 113
     SEMICOL         reduce using rule 6 (stmtblock -> LBRACE error RBRACE .)
 
 
-state 114
+state 116
 
     (8) stmtS -> error SEMICOL . stmtS
     (7) stmtS -> . stmt SEMICOL stmtS
@@ -4117,10 +4149,12 @@ state 114
     (60) stmt -> . NAME EQUAL exp
     (61) stmt -> . IF exp THEN stmtblock
     (62) stmt -> . IF exp THEN stmtblock elsif ELSE THEN stmtblock
-    (65) stmt -> . DO stmtblock WHILE exp
-    (66) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
-    (69) stmt -> . PRINT LPAREN optargs RPAREN
-    (70) stmt -> . RETURN exp
+    (65) stmt -> . BREAK
+    (66) stmt -> . CONTINUE
+    (67) stmt -> . DO stmtblock WHILE exp
+    (68) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
+    (71) stmt -> . PRINT LPAREN optargs RPAREN
+    (72) stmt -> . RETURN exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -4151,34 +4185,36 @@ state 114
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    error           shift and go to state 131
+    error           shift and go to state 133
     RBRACE          reduce using rule 9 (stmtS -> .)
     NAME            shift and go to state 5
     STRUCT          shift and go to state 8
     MAKE            shift and go to state 9
     IF              shift and go to state 12
-    DO              shift and go to state 13
-    FOR             shift and go to state 14
-    PRINT           shift and go to state 15
-    RETURN          shift and go to state 16
-    CALL            shift and go to state 17
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    BREAK           shift and go to state 13
+    CONTINUE        shift and go to state 14
+    DO              shift and go to state 15
+    FOR             shift and go to state 16
+    PRINT           shift and go to state 17
+    RETURN          shift and go to state 18
+    CALL            shift and go to state 19
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    stmtS                          shift and go to state 132
-    stmt                           shift and go to state 92
+    stmtS                          shift and go to state 134
+    stmt                           shift and go to state 94
     exp                            shift and go to state 7
 
-state 115
+state 117
 
     (7) stmtS -> stmt SEMICOL . stmtS
     (7) stmtS -> . stmt SEMICOL stmtS
@@ -4199,10 +4235,12 @@ state 115
     (60) stmt -> . NAME EQUAL exp
     (61) stmt -> . IF exp THEN stmtblock
     (62) stmt -> . IF exp THEN stmtblock elsif ELSE THEN stmtblock
-    (65) stmt -> . DO stmtblock WHILE exp
-    (66) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
-    (69) stmt -> . PRINT LPAREN optargs RPAREN
-    (70) stmt -> . RETURN exp
+    (65) stmt -> . BREAK
+    (66) stmt -> . CONTINUE
+    (67) stmt -> . DO stmtblock WHILE exp
+    (68) stmt -> . FOR NAME EQUAL exp TO exp UNTIL step stmtblock
+    (71) stmt -> . PRINT LPAREN optargs RPAREN
+    (72) stmt -> . RETURN exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -4233,36 +4271,38 @@ state 115
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    error           shift and go to state 131
+    error           shift and go to state 133
     RBRACE          reduce using rule 9 (stmtS -> .)
     NAME            shift and go to state 5
     STRUCT          shift and go to state 8
     MAKE            shift and go to state 9
     IF              shift and go to state 12
-    DO              shift and go to state 13
-    FOR             shift and go to state 14
-    PRINT           shift and go to state 15
-    RETURN          shift and go to state 16
-    CALL            shift and go to state 17
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    BREAK           shift and go to state 13
+    CONTINUE        shift and go to state 14
+    DO              shift and go to state 15
+    FOR             shift and go to state 16
+    PRINT           shift and go to state 17
+    RETURN          shift and go to state 18
+    CALL            shift and go to state 19
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    stmt                           shift and go to state 92
-    stmtS                          shift and go to state 133
+    stmt                           shift and go to state 94
+    stmtS                          shift and go to state 135
     exp                            shift and go to state 7
 
-state 116
+state 118
 
-    (66) stmt -> FOR NAME EQUAL exp . TO exp UNTIL step stmtblock
+    (68) stmt -> FOR NAME EQUAL exp . TO exp UNTIL step stmtblock
     (15) exp -> exp . PLUS exp
     (16) exp -> exp . MINUS exp
     (17) exp -> exp . MULTIPLY exp
@@ -4278,31 +4318,31 @@ state 116
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    TO              shift and go to state 134
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    TO              shift and go to state 136
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 117
+state 119
 
-    (69) stmt -> PRINT LPAREN optargs RPAREN .
+    (71) stmt -> PRINT LPAREN optargs RPAREN .
 
-    SEMICOL         reduce using rule 69 (stmt -> PRINT LPAREN optargs RPAREN .)
+    SEMICOL         reduce using rule 71 (stmt -> PRINT LPAREN optargs RPAREN .)
 
 
-state 118
+state 120
 
     (13) args -> exp COMMA . args
     (13) args -> . exp COMMA args
@@ -4337,31 +4377,31 @@ state 118
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 96
-    args                           shift and go to state 135
+    exp                            shift and go to state 98
+    args                           shift and go to state 137
 
-state 119
+state 121
 
     (10) exp -> CALL NAME LPAREN optargs . RPAREN
 
-    RPAREN          shift and go to state 136
+    RPAREN          shift and go to state 138
 
 
-state 120
+state 122
 
     (41) stmt -> NAME DOT NAME EQUAL exp .
     (15) exp -> exp . PLUS exp
@@ -4380,23 +4420,23 @@ state 120
     (28) exp -> exp . NE exp
 
     SEMICOL         reduce using rule 41 (stmt -> NAME DOT NAME EQUAL exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 121
+state 123
 
     (31) stmt -> NAME DOT POP LPAREN exp . RPAREN
     (15) exp -> exp . PLUS exp
@@ -4414,24 +4454,24 @@ state 121
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    RPAREN          shift and go to state 137
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    RPAREN          shift and go to state 139
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 122
+state 124
 
     (32) stmt -> NAME DOT PUSH LPAREN exp . RPAREN
     (15) exp -> exp . PLUS exp
@@ -4449,24 +4489,24 @@ state 122
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    RPAREN          shift and go to state 138
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    RPAREN          shift and go to state 140
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 123
+state 125
 
     (33) stmt -> NAME DOT INDEX LPAREN exp . RPAREN
     (15) exp -> exp . PLUS exp
@@ -4484,24 +4524,24 @@ state 123
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    RPAREN          shift and go to state 139
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    RPAREN          shift and go to state 141
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 124
+state 126
 
     (34) stmt -> NAME DOT SLICE LPAREN exp . COMMA exp RPAREN
     (15) exp -> exp . PLUS exp
@@ -4519,24 +4559,24 @@ state 124
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    COMMA           shift and go to state 140
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    COMMA           shift and go to state 142
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 125
+state 127
 
     (39) structexp -> NAME EQUAL . exp
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -4569,54 +4609,57 @@ state 125
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 141
+    exp                            shift and go to state 143
 
-state 126
+state 128
 
     (35) stmt -> STRUCT NAME SEP structargs SEP .
 
     SEMICOL         reduce using rule 35 (stmt -> STRUCT NAME SEP structargs SEP .)
 
 
-state 127
+state 129
 
-    (36) structargs -> structexp COMMA . structexp
+    (36) structargs -> structexp COMMA . structargs
+    (36) structargs -> . structexp COMMA structargs
+    (37) structargs -> . structexp
     (38) structexp -> . NAME
     (39) structexp -> . NAME EQUAL exp
 
-    NAME            shift and go to state 104
+    NAME            shift and go to state 106
 
-    structexp                      shift and go to state 142
+    structexp                      shift and go to state 108
+    structargs                     shift and go to state 144
 
-state 128
+state 130
 
     (30) list -> LBRACK optargs . RBRACK
 
-    RBRACK          shift and go to state 143
+    RBRACK          shift and go to state 145
 
 
-state 129
+state 131
 
     (62) stmt -> IF exp THEN stmtblock elsif . ELSE THEN stmtblock
 
-    ELSE            shift and go to state 144
+    ELSE            shift and go to state 146
 
 
-state 130
+state 132
 
     (63) elsif -> ELIF . exp THEN stmtblock elsif
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -4649,46 +4692,46 @@ state 130
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 145
+    exp                            shift and go to state 147
 
-state 131
+state 133
 
     (8) stmtS -> error . SEMICOL stmtS
 
-    SEMICOL         shift and go to state 114
+    SEMICOL         shift and go to state 116
 
 
-state 132
+state 134
 
     (8) stmtS -> error SEMICOL stmtS .
 
     RBRACE          reduce using rule 8 (stmtS -> error SEMICOL stmtS .)
 
 
-state 133
+state 135
 
     (7) stmtS -> stmt SEMICOL stmtS .
 
     RBRACE          reduce using rule 7 (stmtS -> stmt SEMICOL stmtS .)
 
 
-state 134
+state 136
 
-    (66) stmt -> FOR NAME EQUAL exp TO . exp UNTIL step stmtblock
+    (68) stmt -> FOR NAME EQUAL exp TO . exp UNTIL step stmtblock
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -4719,23 +4762,23 @@ state 134
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 146
+    exp                            shift and go to state 148
 
-state 135
+state 137
 
     (13) args -> exp COMMA args .
 
@@ -4743,7 +4786,7 @@ state 135
     RBRACK          reduce using rule 13 (args -> exp COMMA args .)
 
 
-state 136
+state 138
 
     (10) exp -> CALL NAME LPAREN optargs RPAREN .
 
@@ -4774,28 +4817,28 @@ state 136
     LBRACE          reduce using rule 10 (exp -> CALL NAME LPAREN optargs RPAREN .)
 
 
-state 137
+state 139
 
     (31) stmt -> NAME DOT POP LPAREN exp RPAREN .
 
     SEMICOL         reduce using rule 31 (stmt -> NAME DOT POP LPAREN exp RPAREN .)
 
 
-state 138
+state 140
 
     (32) stmt -> NAME DOT PUSH LPAREN exp RPAREN .
 
     SEMICOL         reduce using rule 32 (stmt -> NAME DOT PUSH LPAREN exp RPAREN .)
 
 
-state 139
+state 141
 
     (33) stmt -> NAME DOT INDEX LPAREN exp RPAREN .
 
     SEMICOL         reduce using rule 33 (stmt -> NAME DOT INDEX LPAREN exp RPAREN .)
 
 
-state 140
+state 142
 
     (34) stmt -> NAME DOT SLICE LPAREN exp COMMA . exp RPAREN
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
@@ -4828,23 +4871,23 @@ state 140
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 147
+    exp                            shift and go to state 149
 
-state 141
+state 143
 
     (39) structexp -> NAME EQUAL exp .
     (15) exp -> exp . PLUS exp
@@ -4864,44 +4907,44 @@ state 141
 
     COMMA           reduce using rule 39 (structexp -> NAME EQUAL exp .)
     SEP             reduce using rule 39 (structexp -> NAME EQUAL exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 142
+state 144
 
-    (36) structargs -> structexp COMMA structexp .
+    (36) structargs -> structexp COMMA structargs .
 
-    SEP             reduce using rule 36 (structargs -> structexp COMMA structexp .)
+    SEP             reduce using rule 36 (structargs -> structexp COMMA structargs .)
 
 
-state 143
+state 145
 
     (30) list -> LBRACK optargs RBRACK .
 
     SEMICOL         reduce using rule 30 (list -> LBRACK optargs RBRACK .)
 
 
-state 144
+state 146
 
     (62) stmt -> IF exp THEN stmtblock elsif ELSE . THEN stmtblock
 
-    THEN            shift and go to state 148
+    THEN            shift and go to state 150
 
 
-state 145
+state 147
 
     (63) elsif -> ELIF exp . THEN stmtblock elsif
     (15) exp -> exp . PLUS exp
@@ -4919,26 +4962,26 @@ state 145
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    THEN            shift and go to state 149
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    THEN            shift and go to state 151
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 146
+state 148
 
-    (66) stmt -> FOR NAME EQUAL exp TO exp . UNTIL step stmtblock
+    (68) stmt -> FOR NAME EQUAL exp TO exp . UNTIL step stmtblock
     (15) exp -> exp . PLUS exp
     (16) exp -> exp . MINUS exp
     (17) exp -> exp . MULTIPLY exp
@@ -4954,24 +4997,24 @@ state 146
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    UNTIL           shift and go to state 150
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    UNTIL           shift and go to state 152
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 147
+state 149
 
     (34) stmt -> NAME DOT SLICE LPAREN exp COMMA exp . RPAREN
     (15) exp -> exp . PLUS exp
@@ -4989,48 +5032,48 @@ state 147
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    RPAREN          shift and go to state 151
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    RPAREN          shift and go to state 153
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 148
+state 150
 
     (62) stmt -> IF exp THEN stmtblock elsif ELSE THEN . stmtblock
     (5) stmtblock -> . LBRACE stmtS RBRACE
     (6) stmtblock -> . LBRACE error RBRACE
 
-    LBRACE          shift and go to state 55
+    LBRACE          shift and go to state 57
 
-    stmtblock                      shift and go to state 152
+    stmtblock                      shift and go to state 154
 
-state 149
+state 151
 
     (63) elsif -> ELIF exp THEN . stmtblock elsif
     (5) stmtblock -> . LBRACE stmtS RBRACE
     (6) stmtblock -> . LBRACE error RBRACE
 
-    LBRACE          shift and go to state 55
+    LBRACE          shift and go to state 57
 
-    stmtblock                      shift and go to state 153
+    stmtblock                      shift and go to state 155
 
-state 150
+state 152
 
-    (66) stmt -> FOR NAME EQUAL exp TO exp UNTIL . step stmtblock
-    (67) step -> . exp
-    (68) step -> .
+    (68) stmt -> FOR NAME EQUAL exp TO exp UNTIL . step stmtblock
+    (69) step -> . exp
+    (70) step -> .
     (10) exp -> . CALL NAME LPAREN optargs RPAREN
     (15) exp -> . exp PLUS exp
     (16) exp -> . exp MINUS exp
@@ -5061,52 +5104,52 @@ state 150
     (55) exp -> . CHAR
     (56) exp -> . LPAREN exp RPAREN
 
-    LBRACE          reduce using rule 68 (step -> .)
-    CALL            shift and go to state 17
-    NAME            shift and go to state 32
-    MINUS           shift and go to state 18
-    INT             shift and go to state 19
-    FLOAT           shift and go to state 20
+    LBRACE          reduce using rule 70 (step -> .)
+    CALL            shift and go to state 19
+    NAME            shift and go to state 34
+    MINUS           shift and go to state 20
+    INT             shift and go to state 21
+    FLOAT           shift and go to state 22
     DEC             shift and go to state 10
     INC             shift and go to state 11
-    NOT             shift and go to state 21
-    TRUE            shift and go to state 22
-    FALSE           shift and go to state 23
-    STRING          shift and go to state 24
-    CHAR            shift and go to state 25
+    NOT             shift and go to state 23
+    TRUE            shift and go to state 24
+    FALSE           shift and go to state 25
+    STRING          shift and go to state 26
+    CHAR            shift and go to state 27
     LPAREN          shift and go to state 6
 
-    exp                            shift and go to state 154
-    step                           shift and go to state 155
+    exp                            shift and go to state 156
+    step                           shift and go to state 157
 
-state 151
+state 153
 
     (34) stmt -> NAME DOT SLICE LPAREN exp COMMA exp RPAREN .
 
     SEMICOL         reduce using rule 34 (stmt -> NAME DOT SLICE LPAREN exp COMMA exp RPAREN .)
 
 
-state 152
+state 154
 
     (62) stmt -> IF exp THEN stmtblock elsif ELSE THEN stmtblock .
 
     SEMICOL         reduce using rule 62 (stmt -> IF exp THEN stmtblock elsif ELSE THEN stmtblock .)
 
 
-state 153
+state 155
 
     (63) elsif -> ELIF exp THEN stmtblock . elsif
     (63) elsif -> . ELIF exp THEN stmtblock elsif
     (64) elsif -> .
 
-    ELIF            shift and go to state 130
+    ELIF            shift and go to state 132
     ELSE            reduce using rule 64 (elsif -> .)
 
-    elsif                          shift and go to state 156
+    elsif                          shift and go to state 158
 
-state 154
+state 156
 
-    (67) step -> exp .
+    (69) step -> exp .
     (15) exp -> exp . PLUS exp
     (16) exp -> exp . MINUS exp
     (17) exp -> exp . MULTIPLY exp
@@ -5122,74 +5165,74 @@ state 154
     (27) exp -> exp . EE exp
     (28) exp -> exp . NE exp
 
-    LBRACE          reduce using rule 67 (step -> exp .)
-    PLUS            shift and go to state 35
-    MINUS           shift and go to state 36
-    MULTIPLY        shift and go to state 37
-    DIVIDE          shift and go to state 38
-    POWER           shift and go to state 39
-    MODULUS         shift and go to state 40
-    AND             shift and go to state 41
-    OR              shift and go to state 42
-    GT              shift and go to state 43
-    LT              shift and go to state 44
-    GTE             shift and go to state 45
-    LTE             shift and go to state 46
-    EE              shift and go to state 47
-    NE              shift and go to state 48
+    LBRACE          reduce using rule 69 (step -> exp .)
+    PLUS            shift and go to state 37
+    MINUS           shift and go to state 38
+    MULTIPLY        shift and go to state 39
+    DIVIDE          shift and go to state 40
+    POWER           shift and go to state 41
+    MODULUS         shift and go to state 42
+    AND             shift and go to state 43
+    OR              shift and go to state 44
+    GT              shift and go to state 45
+    LT              shift and go to state 46
+    GTE             shift and go to state 47
+    LTE             shift and go to state 48
+    EE              shift and go to state 49
+    NE              shift and go to state 50
 
 
-state 155
+state 157
 
-    (66) stmt -> FOR NAME EQUAL exp TO exp UNTIL step . stmtblock
+    (68) stmt -> FOR NAME EQUAL exp TO exp UNTIL step . stmtblock
     (5) stmtblock -> . LBRACE stmtS RBRACE
     (6) stmtblock -> . LBRACE error RBRACE
 
-    LBRACE          shift and go to state 55
+    LBRACE          shift and go to state 57
 
-    stmtblock                      shift and go to state 157
+    stmtblock                      shift and go to state 159
 
-state 156
+state 158
 
     (63) elsif -> ELIF exp THEN stmtblock elsif .
 
     ELSE            reduce using rule 63 (elsif -> ELIF exp THEN stmtblock elsif .)
 
 
-state 157
+state 159
 
-    (66) stmt -> FOR NAME EQUAL exp TO exp UNTIL step stmtblock .
+    (68) stmt -> FOR NAME EQUAL exp TO exp UNTIL step stmtblock .
 
-    SEMICOL         reduce using rule 66 (stmt -> FOR NAME EQUAL exp TO exp UNTIL step stmtblock .)
+    SEMICOL         reduce using rule 68 (stmt -> FOR NAME EQUAL exp TO exp UNTIL step stmtblock .)
 
 WARNING: 
 WARNING: Conflicts:
 WARNING: 
-WARNING: shift/reduce conflict for PLUS in state 75 resolved as shift
-WARNING: shift/reduce conflict for MINUS in state 75 resolved as shift
-WARNING: shift/reduce conflict for MULTIPLY in state 75 resolved as shift
-WARNING: shift/reduce conflict for DIVIDE in state 75 resolved as shift
-WARNING: shift/reduce conflict for POWER in state 75 resolved as shift
-WARNING: shift/reduce conflict for MODULUS in state 75 resolved as shift
-WARNING: shift/reduce conflict for AND in state 75 resolved as shift
-WARNING: shift/reduce conflict for OR in state 75 resolved as shift
-WARNING: shift/reduce conflict for GT in state 75 resolved as shift
-WARNING: shift/reduce conflict for LT in state 75 resolved as shift
-WARNING: shift/reduce conflict for GTE in state 75 resolved as shift
-WARNING: shift/reduce conflict for LTE in state 75 resolved as shift
-WARNING: shift/reduce conflict for EE in state 75 resolved as shift
-WARNING: shift/reduce conflict for NE in state 75 resolved as shift
-WARNING: shift/reduce conflict for PLUS in state 76 resolved as shift
-WARNING: shift/reduce conflict for MINUS in state 76 resolved as shift
-WARNING: shift/reduce conflict for MULTIPLY in state 76 resolved as shift
-WARNING: shift/reduce conflict for DIVIDE in state 76 resolved as shift
-WARNING: shift/reduce conflict for POWER in state 76 resolved as shift
-WARNING: shift/reduce conflict for MODULUS in state 76 resolved as shift
-WARNING: shift/reduce conflict for AND in state 76 resolved as shift
-WARNING: shift/reduce conflict for OR in state 76 resolved as shift
-WARNING: shift/reduce conflict for GT in state 76 resolved as shift
-WARNING: shift/reduce conflict for LT in state 76 resolved as shift
-WARNING: shift/reduce conflict for GTE in state 76 resolved as shift
-WARNING: shift/reduce conflict for LTE in state 76 resolved as shift
-WARNING: shift/reduce conflict for EE in state 76 resolved as shift
-WARNING: shift/reduce conflict for NE in state 76 resolved as shift
+WARNING: shift/reduce conflict for PLUS in state 77 resolved as shift
+WARNING: shift/reduce conflict for MINUS in state 77 resolved as shift
+WARNING: shift/reduce conflict for MULTIPLY in state 77 resolved as shift
+WARNING: shift/reduce conflict for DIVIDE in state 77 resolved as shift
+WARNING: shift/reduce conflict for POWER in state 77 resolved as shift
+WARNING: shift/reduce conflict for MODULUS in state 77 resolved as shift
+WARNING: shift/reduce conflict for AND in state 77 resolved as shift
+WARNING: shift/reduce conflict for OR in state 77 resolved as shift
+WARNING: shift/reduce conflict for GT in state 77 resolved as shift
+WARNING: shift/reduce conflict for LT in state 77 resolved as shift
+WARNING: shift/reduce conflict for GTE in state 77 resolved as shift
+WARNING: shift/reduce conflict for LTE in state 77 resolved as shift
+WARNING: shift/reduce conflict for EE in state 77 resolved as shift
+WARNING: shift/reduce conflict for NE in state 77 resolved as shift
+WARNING: shift/reduce conflict for PLUS in state 78 resolved as shift
+WARNING: shift/reduce conflict for MINUS in state 78 resolved as shift
+WARNING: shift/reduce conflict for MULTIPLY in state 78 resolved as shift
+WARNING: shift/reduce conflict for DIVIDE in state 78 resolved as shift
+WARNING: shift/reduce conflict for POWER in state 78 resolved as shift
+WARNING: shift/reduce conflict for MODULUS in state 78 resolved as shift
+WARNING: shift/reduce conflict for AND in state 78 resolved as shift
+WARNING: shift/reduce conflict for OR in state 78 resolved as shift
+WARNING: shift/reduce conflict for GT in state 78 resolved as shift
+WARNING: shift/reduce conflict for LT in state 78 resolved as shift
+WARNING: shift/reduce conflict for GTE in state 78 resolved as shift
+WARNING: shift/reduce conflict for LTE in state 78 resolved as shift
+WARNING: shift/reduce conflict for EE in state 78 resolved as shift
+WARNING: shift/reduce conflict for NE in state 78 resolved as shift
