@@ -1,0 +1,9 @@
+kaam f(x){
+x++;
+bhejo(x);
+};
+
+banao x = 3;
+
+bullao f(x); ~stmt
+banao y = f(x); ~exp

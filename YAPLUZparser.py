@@ -105,10 +105,6 @@ def p_stmtS_empty(p):
 #p.lineno(num). Return the line number for symbol num
 #p.lexpos(num). Return the lexing position for symbol num 
 
-def p_exp_call(p):
-    """exp : CALL NAME LPAREN optargs RPAREN"""
-    p[0] = ("Call",p[2],p[4]) # optsargs may be empty (p[2])
-
 def p_optargs(p):
     """optargs : args"""
     p[0] = p[1]
@@ -154,6 +150,25 @@ def p_exp_name(p):
     """exp : NAME"""
     p[0] = ('Name', p[1])
 
+#fun(x), usage may be like y = fun(x);
+def p_exp_fcall(p): 
+    """exp : NAME LPAREN optargs RPAREN"""
+    p[0] = ("FCall",p[1],p[3]) # optsargs may be empty (p[2])
+
+# bullao fun(x);
+# note, stmt calls is different from exp call, but both trigger same function expression
+def p_stmt_fcall(p): 
+    """stmt : CALL NAME LPAREN optargs RPAREN"""
+    p[0] = ("FCall",p[2],p[4]) # optsargs may be empty (p[2])
+
+def p_stmt_fret(p): 
+    """stmt : RETURN exp"""
+    p[0] = ("FReturn",p[2])
+
+def p_stmt_funcdef(p): 
+    """stmt : FUNCTION NAME LPAREN optargs RPAREN stmtblock"""
+    p[0] = ("Func",p[2],p[4],p[6]) # optsargs may be empty (p[2])
+
 def p_list(p):
     """list : LBRACK optargs RBRACK"""
     p[0] = p[2]
@@ -167,13 +182,14 @@ def p_stmt_listpush(p):
     p[0] = ('ListF', 'Push', p[1], p[5])
 
 def p_stmt_listindex(p):
-    """stmt : NAME DOT INDEX LPAREN exp RPAREN"""
-    p[0] = ('ListF', 'Index', p[1], p[5])
+    """exp : NAME DOT INDEX LPAREN exp RPAREN"""
+    p[0] = ('GetIndex', p[1], p[5])
 
 def p_stmt_listslice(p):
     """stmt : NAME DOT SLICE LPAREN exp COMMA exp RPAREN"""
     p[0] = ('ListF', 'Slice', p[1], p[5], p[7])
 
+# do not allow creation of structs inside functions, these definitions must be global, structdef is global too
 def p_stmt_structcreate(p):
     """stmt : STRUCT NAME SEP structargs SEP"""
     p[0] = ('SCreate', p[2], p[4])
@@ -351,10 +367,6 @@ def p_step_empty(p):
 def p_stmt_print(p):
     """stmt : PRINT LPAREN optargs RPAREN"""
     p[0] = ('Print', p[3])
-   
-def p_stmt_return(p):
-    """stmt : RETURN exp"""
-    p[0] = ('Return', p[2])
 
 def p_error(p):
     print("Syntax error.")
@@ -365,6 +377,7 @@ parser = yacc.yacc() # start parsing, yacc object created
 isBroken = False
 globalenv = {}
 structdef = {}
+funcdef = {}
 
 def eeb(e): #evaluate expression binary
     operator = e[1]
@@ -467,8 +480,26 @@ def varCreate(p):
             raise KeyError(f"Error: A variable by that name already exists.")
         globalenv[varname]= None
 
+def functionCall(f):
+    func = f[1]
+    fargs = f[2]
+    if not func in funcdef:
+        raise NameError(f"Error: No such function \'{func}\' defined.")
+
+    defined_fargs = funcdef[func][0]    
+    if len(fargs) > len(defined_fargs):
+        raise RuntimeError(f"Error: Function {func} was given too many arguments.")
+
+    # more error handling for args, but assume same number of args for now
+    templateFunction(fargs, funcdef[func][0])
+    
+
+
 def expEvaluate(e):
     global globalenv
+    global structdef
+    global funcdef
+    #print(f"exp: {e}")    
     if e == None: # none expression
         return None
 
@@ -483,14 +514,26 @@ def expEvaluate(e):
         if not e[1] in globalenv:
             raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
         return globalenv[e[1]]
+    elif etype == 'FCall':
+        return functionCall(e)
+    elif etype == 'GetIndex':
+        listvar = e[1]
+        if listvar in globalenv and type(globalenv[listvar]) == list:
+            index = eeb(e[2])
+            try:
+                return globalenv[listvar][index]
+            except:
+                raise NameError("Error: List index out of range.") ###   
+        else:
+            raise NameError("Error: List error.")
     elif etype == 'SVGet':
         structObj = e[1]
         varName = e[2]
         if not structObj in globalenv:
-            raise NameError(f"Error: No such variable \'{p[1]}\' exists.") 
+            raise NameError(f"Error: No such variable \'{structObj}\' exists.") 
         
         if not varName in globalenv[structObj]:
-            raise NameError(f"Error: No such variable \'{p[1]}\' exists inside that struct.") 
+            raise NameError(f"Error: No such variable \'{varName}\' exists inside that struct.") 
         varVal = globalenv[structObj][varName]
         return varVal
     elif etype == 'Dec':
@@ -523,8 +566,8 @@ def runProgram(p): # p[0] == 'Program': a bunch of statements
             stmtEvaluate(stmt[1]) # since stmt[0] == 'Stmt' here in Program
 
 def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
-    global structdef, isBroken
-    #print(f"CT: {p}")    
+    global structdef, funcdef, globalenv, isBroken
+    #print(f"stmt: {p}")    
     stype = p[0] # node type of parse tree
     if stype == 'DecR':
         globalenv[p[1][1]] -= 1
@@ -574,7 +617,7 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
     elif stype == 'For':
         countervar = p[1]
         if not countervar in globalenv:
-            raise NameError(f"Error: No such variable \'{p[1]}\' exists.") 
+            raise NameError(f"Error: No such variable \'{countervar}\' exists.") 
         start = eeb(p[2]) # must be numerical expression
         end = eeb(p[3]) # evaluating numerical expressions
         do_stmts = p[4]
@@ -620,6 +663,20 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
                     result = 'ghalat'
             print(result, end=" ")
         print()  
+    elif stype == 'FCall':
+        expEvaluate(p)
+        # nothing is returned in the simple void stmt function call
+    elif stype == 'FReturn':
+        returnVal = expEvaluate(p[1])
+        return returnVal
+    elif stype == 'Func':
+        func = p[1]
+        fargs = p[2]
+        fstmts = p[3]
+        if func in funcdef:
+            raise KeyError(f"Function {func} has already been defined.")
+        funcdef[func] = [fargs, fstmts] # default values of args, fargs must be resolved further
+
     elif stype == 'ListF':
         listvar = p[2]
         if listvar in globalenv and type(globalenv[listvar]) == list:
@@ -633,11 +690,11 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
                     globalenv[listvar].pop()
             elif ftype == 'Push': #append
                 globalenv[listvar].append(e1)
-            elif ftype == 'Index':
-                print(vlist[e1])
             elif ftype == 'Slice':
                 e2 = eeb(p[4])
                 globalenv[listvar] = vlist[e1:e2+1]
+        else:
+            raise NameError("List error.")
     elif stype == 'SCreate':
         structname = p[1]
         structargs = p[2]
@@ -668,10 +725,10 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         varName = p[2]
         varVal = p[3]
         if not structObj in globalenv:
-            raise NameError(f"Error: No such variable \'{p[1]}\' exists.") 
+            raise NameError(f"Error: No such variable \'{structObj}\' exists.") 
         
         if not varName in globalenv[structObj]:
-            raise NameError(f"Error: No such variable \'{p[1]}\' exists inside that struct.") 
+            raise NameError(f"Error: No such variable \'{varName}\' exists inside that struct.") 
         
         globalenv[structObj][varName] = expEvaluate(varVal)
     else:       
@@ -682,7 +739,24 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
     
     #print("GLOBAL ENV:",globalenv)
 
-
+def templateFunction(fargs, fstmtsblock):
+    print("Inside function")
+    print(fargs)
+    stmtlist = fstmtsblock
+    for stmt in stmtlist:
+        if stmt != None and stmt[1] != []:
+            stype = stmt[0]
+            if stype == 'FReturn':
+                returnVal = expEvaluate(p[1])
+                return returnVal
+                continue # skip evaluation of ret/call stmt
+            elif stype == 'FCall':
+                return functionCall(stmt)
+                continue
+            stmtEvaluate(stmt)
+            print(globalenv)
+    
+    
 while True:
     break
     userin = input("{YAPL_UZ} ")
@@ -697,6 +771,7 @@ while True:
 while True:
     globalenv.clear() #refresh state
     structdef.clear()
+    funcdef.clear()
     fileHandler = open(sys.argv[1],"r")
     userin = fileHandler.read()
     fileHandler.close()

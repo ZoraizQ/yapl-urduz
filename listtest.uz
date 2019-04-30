@@ -1,6 +1,6 @@
 banao a = [3, 4, 5];
 dekhao(a);
-a.index(1);
+dekhao(a.index(2));
 a.pop(0);
 dekhao(a);
 a.pop(1);
