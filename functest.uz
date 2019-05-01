@@ -1,9 +1,8 @@
 kaam f(i,y="Inside function"){
 dekhao(y);
-x++;
+i++;
 bhejo(i);
 };
 
 banao x = 3;
-bullao f(x); ~stmt
-banao y = f(x); ~exp
+dekhao(f(x), "ended");

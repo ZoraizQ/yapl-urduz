@@ -1,4 +1,4 @@
-banao a = (5*(9-((3+1)-1))+4);
+banao a = (5*(9-((3 + 1)-1))+4);
 banao b = 1+2+0.99f;
 b++;
 b++;
@@ -17,8 +17,8 @@ lekinagar 5==5 phir
 {
 dekhao("ELIF2");
 agar (3 == 3) phir{
-dekhao("NESTEDIFinELIF2");	
-}; 
+dekhao("NESTEDIFinELIF2");
+};
 }
 warna phir{
 dekhao("ELSE");

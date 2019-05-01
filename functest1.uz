@@ -1,0 +1,9 @@
+kaam fun(a,b){
+agar (b==1) phir{
+bhejo a;
+};
+
+bhejo fun(a+a, b/2);
+};
+
+dekhao(fun(1,2));

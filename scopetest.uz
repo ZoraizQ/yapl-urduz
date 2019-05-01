@@ -1,0 +1,7 @@
+banao x = 4;
+
+agar sach phir{
+banao x;
+x = 2;
+dekhao(x);
+};

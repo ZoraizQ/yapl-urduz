@@ -21,7 +21,7 @@ reserved = { # single rule, special
     'aur':'AND', # can be caps too
     'ya':'OR',
     'na':'NOT',
-    'bullao':'CALL',
+    'karwao':'CALL',
     'sach':'TRUE',
     'ghalat':'FALSE',
     'pop':'POP',

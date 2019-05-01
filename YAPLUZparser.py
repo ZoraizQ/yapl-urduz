@@ -3,10 +3,12 @@ import YAPLUZlexer
 import math
 import random
 import sys
+from termcolor import colored
 
 #sys.tracebacklimit = 0 # to prevent traceback debug output since it is not needed
 
 tokens = YAPLUZlexer.tokens
+reserved = YAPLUZlexer.reserved
 '''
 banao myNum = 0
 @ strong comment?
@@ -374,134 +376,160 @@ def p_error(p):
 
 parser = yacc.yacc() # start parsing, yacc object created
 isBroken = False
-globalenv = {}
+globalenv = (None, {}) # parent == None for globalenv, and empty initially
 structdef = {}
 funcdef = {}
 
-def eeb(e): #evaluate expression binary
+def eeb(e, env): #evaluate expression binary
     operator = e[1]
     if e[0] == 'Group':
-        return eeb(e[1])
+        return eeb(e[1], env)
+    elif e[0] == 'CompareEXP':
+        return eec(e, env)
+    elif e[0] == 'FCall':
+        retVal = functionCall(e, env)
+        #quit()
+        #print(colored(f"Returned fcall: {retVal}","red"))
+        if retVal != None:
+            return retVal
+
     elif e[0] == 'Dec':
-        return eeb(e[1]) - 1
+        return eeb(e[1], env) - 1
     elif e[0] == 'Inc':
-        return eeb(e[1]) + 1
+        return eeb(e[1], env) + 1
     elif operator == '+':
-        return eeb(e[2]) + eeb(e[3])
+        return eeb(e[2], env) + eeb(e[3], env)
     elif operator == '-':
-        return eeb(e[2]) - eeb(e[3])
+        return eeb(e[2], env) - eeb(e[3], env)
     elif operator == '*':
-        return eeb(e[2]) * eeb(e[3])
+        return eeb(e[2], env) * eeb(e[3], env)
     elif operator == '/':
-        denom = eeb(e[3])
+        denom = eeb(e[3], env)
         if denom == 0:
             raise ZeroDivisionError("Error: Division by 0.")
-        return float(eeb(e[2])) / denom
+        num = eeb(e[2], env)
+        if type(num) == int and type(denom) == int:
+            return  num // denom
+        else:
+            return num / denom
     elif operator == '^':
-        return abs(eeb(e[2]))** eeb(e[3])
+        return abs(eeb(e[2]), env)** eeb(e[3], env)
     elif operator == '%':
-        return eeb(e[2]) % eeb(e[3])
+        return eeb(e[2], env) % eeb(e[3], env)
     elif e[0] == 'Name':
-        if not e[1] in globalenv:
-            raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
-        return globalenv[e[1]] 
+        varname = e[1]
+        if envLookup(env, varname) == None:
+            raise NameError(f"Error: No such variable \'{varname}\' exists.")
+        return envLookup(env, varname) 
     else:
-        if type(e[1])==str or type(e[1])==bool:
-            raise TypeError("Error: Type not supported with this operation.")
         return e[1]
 
     
-def eec(e): # evaluate expression comparison
+def eec(e, env): # evaluate expression comparison
     #print(f"CT in eec: {e}")
     operator = e[1]
     if e[0] == 'Group':
-        return eec(e[1])
+        return eec(e[1], env)
     elif e[0] == 'BinaryEXP':
-        return eeb(e)
+        return eeb(e, env)
     elif operator == '<':
-        boolres = eec(e[2]) < eec(e[3])
+        boolres = eec(e[2], env) < eec(e[3], env)
     elif operator == '<=':
-        boolres = eec(e[2]) <= eec(e[3])
+        boolres = eec(e[2], env) <= eec(e[3], env)
     elif operator == '>':
-        boolres = eec(e[2]) > eec(e[3])
+        boolres = eec(e[2], env) > eec(e[3], env)
     elif operator == '>=':
-        boolres = eec(e[2]) >= eec(e[3])
+        boolres = eec(e[2], env) >= eec(e[3], env)
     elif operator == '!=':
-        boolres = eec(e[2]) != eec(e[3])
+        boolres = eec(e[2], env) != eec(e[3], env)
     elif operator == '==':
-        boolres = eec(e[2]) == eec(e[3])
+        boolres = eec(e[2], env) == eec(e[3], env)
     elif operator == 'aur':
-        paramL = eec(e[2])
-        paramR = eec(e[3])
+        paramL = eec(e[2], env)
+        paramR = eec(e[3], env)
         if type(paramL) == str or type(paramL) == int or type(paramL) == float:
             raise TypeError("Error: Type not supported with this operation.")
         elif type(paramR) == str or type(paramR) == int or type(paramR) == float:
             raise TypeError("Error: Type not supported with this operation.")
         boolres = paramL and paramR
     elif operator == 'ya':
-        paramL = eec(e[2])
-        paramR = eec(e[3])
+        paramL = eec(e[2], env)
+        paramR = eec(e[3], env)
         if type(paramL) == str or type(paramL) == int or type(paramL) == float:
             raise TypeError("Error: Type not supported with this operation.")
         elif type(paramR) == str or type(paramR) == int or type(paramR) == float:
             raise TypeError("Error: Type not supported with this operation.")
         boolres = paramL or paramR
     elif e[0] == 'Name':
-        if not e[1] in globalenv:
+        varname = e[1]
+        varVal = envLookup(env, varname)
+        if varVal == None:
             raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
-        return globalenv[e[1]]
+        return varVal
     else:
         boolres = e[1]
 
     return boolres
 
 
-def varCreate(p):
-    global globalenv
+def varCreate(p, env): # variable will be created in the environment where varCreate is called
+    #print("VarCreate",env)
     if type(p[1]) == tuple or type(p[1]) == list: # assignment tuple possible
         # initialization with creation
         varname = p[1][1]
-        if varname in globalenv:
+        if varname in env:
             raise KeyError(f"Error: A variable by that name already exists.")
         value = p[1][2]
         if type(value) == list:
             varlist = []
             for element in value:
                 varlist.append(element[1]) # assuming not list inside, only single var
-            globalenv[varname] = varlist
+            env[1][varname] = varlist
         else:
+            value = expEvaluate(p[1][2], env)
+            #print("Var",varname, value)
             #print("Current tree in varCreate", p, "Value",value)
-            globalenv[varname] = expEvaluate(value) # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
+            # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
+            env[1][varname] = value
     else:
         # only creation, default value None assigned
         varname = p[1]
-        if varname in globalenv:
+        if varname in env:
             raise KeyError(f"Error: A variable by that name already exists.")
-        globalenv[varname]= None
+        env[1][varname] = 0
 
-def templateFunction(fargs, fstmtsblock):
-    stmtlist = fstmtsblock
+
+def blockEvaluate(p, env): # p[0] == 'Block'
+    global isBroken
+    stmtlist = p[1]
+    child_env = (env, {}) # create new env inside block everytime
+    # make parent pointer of new child env point to previous env
+    for stmt in stmtlist:
+        #print(stmt, env)
+            #quit()
+        if stmt == 'Continue':
+            break # breaking this iteration of the loop OR block later, so this is continue actually
+        if stmt == 'Break':
+            isBroken = True # this also breaks the next iterations/stmts, only loops turn this off after execution, so give error in normal blocks
+            break # break this iteration
+        if stmt != None and stmt[1] != []:
+            #print(stmt)
+            ret = stmtEvaluate(stmt, child_env)
+            if ret != None:
+                #print("Block got ret value",ret)
+                return ret
+
+def templateFunction(fname, stmtlist, env):
+    global funcdef
     # currently every fargs stores every variable in 2-length tuples (NAME,VALUE)
     # need to convert to env dictionary form
-    fenv_dict = {}
-    for fa in fargs:
-        fenv_dict[fa[0]] = fa[1]
-    # fargs list converted to function environment of variables
+    returnVal = blockEvaluate(stmtlist, env)    
+    if returnVal != None:
+        #print("function got retvalue", returnVal)
+        return returnVal
 
-    for stmt in stmtlist:
-        if stmt != None and stmt[1] != []:
-            stype = stmt[0]
-            if stype == 'FReturn':
-                returnVal = expEvaluate(p[1])
-                return returnVal
-                continue # skip evaluation of ret/call stmt
-            elif stype == 'FCall':
-                return functionCall(stmt)
-                continue
-            stmtEvaluate(stmt)
-            #print(globalenv)
-
-def functionCall(f):
+counter = 0   
+def functionCall(f, env):
     func = f[1]
     fargs = f[2]
     if not func in funcdef:
@@ -513,42 +541,70 @@ def functionCall(f):
 
     #mapped values of given fargs to defined fargs
     for i in range(len(fargs)): #dfa = defined function argument
-        defined_fargs[i] = (defined_fargs[i][0], expEvaluate(fargs[i])) 
+        defined_fargs[i] = (defined_fargs[i][0], expEvaluate(fargs[i], env)) 
         
     #print("MAPPED FARGS:", defined_fargs)
     # more error handling for args, but assume same number of args for now
     #print(funcdef[func][1])
-    templateFunction(defined_fargs, funcdef[func][1])
-    
+    fenv_dict = {}
+    for fa in defined_fargs:
+        fenv_dict[fa[0]] = fa[1]
+    # fargs list converted to function environment of variables
+    if env[0] == None:
+        fenv = (env, fenv_dict)
+    else:
+        fenv = (env[0], fenv_dict)
+    # converted to fenv
+    #print(colored(f"New fenv in call {fenv}","blue"))
+    global counter
+    return templateFunction(func, funcdef[func][1], fenv)
 
+# if None returned could not find any such variable, give error
+def envLookup(env, varName):
+    env_parent = env[0]
+    env_dict = env[1]
+    if varName in env_dict:
+        return env_dict[varName]
+    elif env_parent == None:
+        return None
+    else:
+        return envLookup(env_parent, varName)
 
-def expEvaluate(e):
-    global globalenv
+def envUpdate(env, varName, varVal):
+    env_parent = env[0]
+    if varName in env[1]:
+        env[1][varName] = varVal
+    elif env_parent != None:
+        envUpdate(env_parent, varName, varVal)
+        
+def expEvaluate(e, env):
     global structdef
     global funcdef
     #print(f"exp: {e}")    
     if e == None: # none expression
         return None
-
+    
     etype = e[0]
     if etype == 'BinaryEXP':
-        return eeb(e) # evaluate binary expression
+        return eeb(e, env) # evaluate binary expression
     elif etype == 'CompareEXP':
-        return eec(e) # evaluate expression comparison
+        return eec(e, env) # evaluate expression comparison
     elif etype == 'Group':
-        return expEvaluate(e[1])
+        return expEvaluate(e[1], env)
     elif etype == 'Name': # get value of variable
-        if not e[1] in globalenv:
-            raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
-        return globalenv[e[1]]
+        varname = e[1]
+        if envLookup(env, varname) == None:
+            raise NameError(f"Error: No such variable \'{varname}\' exists.")
+        return envLookup(env, varname)
     elif etype == 'FCall':
-        return functionCall(e)
+        return functionCall(e, env)
     elif etype == 'GetIndex':
         listvar = e[1]
-        if listvar in globalenv and type(globalenv[listvar]) == list:
-            index = eeb(e[2])
+        val = envLookup(env, listvar)
+        if val != None and type(val) == list:
+            index = eeb(e[2], env)
             try:
-                return globalenv[listvar][index]
+                return val[index]
             except:
                 raise NameError("Error: List index out of range.") ###   
         else:
@@ -556,97 +612,103 @@ def expEvaluate(e):
     elif etype == 'SVGet':
         structObj = e[1]
         varName = e[2]
-        if not structObj in globalenv:
+        structVal = envLookup(env, structObj)
+        if structVal == None:
             raise NameError(f"Error: No such variable \'{structObj}\' exists.") 
         
-        if not varName in globalenv[structObj]:
+        if structVal[varName] == None:
             raise NameError(f"Error: No such variable \'{varName}\' exists inside that struct.") 
-        varVal = globalenv[structObj][varName]
+        varVal = structVal[varName]
         return varVal
     elif etype == 'Dec':
-        return eeb(e[1]) - 1
+        return eeb(e[1], env) - 1
     elif etype == 'Inc':
-        return eeb(e[1]) + 1
+        return eeb(e[1], env) + 1
     else: # Num, String, Char etc.
-        return e[1]
-
-
-def blockEvaluate(p): # p[0] == 'Block'
-    global globalenv
-    global isBroken
-    stmtlist = p[1]
-    for stmt in stmtlist:
-        if stmt == 'Continue':
-            break # breaking this iteration of the loop OR block later, so this is continue actually
-        if stmt == 'Break':
-            isBroken = True # this also breaks the next iterations/stmts, only loops turn this off after execution, so give error in normal blocks
-            break # break this iteration
-        if stmt != None and stmt[1] != []:
-            stmtEvaluate(stmt)
-            
+        return e[1] 
 
 def runProgram(p): # p[0] == 'Program': a bunch of statements
     global globalenv
     proglist = p[1]  
     for stmt in proglist: # statements in proglist
         if stmt != None and stmt[1] != []:
-            stmtEvaluate(stmt[1]) # since stmt[0] == 'Stmt' here in Program
+            stmtEvaluate(stmt[1], globalenv) # since stmt[0] == 'Stmt' here in Program
+            # these directly read program statements have the global env
 
-def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
-    global structdef, funcdef, globalenv, isBroken
-    #print(f"stmt: {p}")    
+def stmtEvaluate(p, env): # p is the parsed tree / program, evalStmts
+    global structdef, funcdef, isBroken
+    #print(f"stmt: {p}","Env: ",env)
     stype = p[0] # node type of parse tree
     if stype == 'DecR':
-        globalenv[p[1][1]] -= 1
+        varname = p[1][1]
+        newVal = envLookup(env, varname)-1
+        envUpdate(env, varname, newVal)
     elif stype == 'IncR':
-        globalenv[p[1][1]] += 1
+        varname = p[1][1]
+        newVal = envLookup(env, varname)+1
+        envUpdate(env, varname, newVal)
     elif stype == '=': # assignment
-        if not p[1] in globalenv:
+        varname = p[1]
+        varVal = expEvaluate(p[2], env)
+        if envLookup(env, varname) == None:
             raise NameError(f"Error: No such variable \'{p[1]}\' exists.")
-        globalenv[p[1]] = expEvaluate(p[2]) # make an entry for the variable in the globalenv dictionary, where the key is the NAME and the value is the assigned expression
+        envUpdate(env, varname, varVal) # make an entry for the variable in the globalenv dictionary, where the key is the NAME and the value is the assigned expression
     elif stype == 'Made': # creation of a variable
-        varCreate(p)
+        varCreate(p, env)
     elif stype == 'If':    
         condition = p[1]
         then_stmts = p[2]
         #print(f"Condition: {condition} Then {then_stmts}")
-        if eec(condition):
+        if eec(condition, env):
             #print("Running then statements in if")
-            blockEvaluate(then_stmts)
+            ret = blockEvaluate(then_stmts, env)
+            if ret != None:
+                return ret
     elif stype == 'IfElse':    
         condition = p[1]
         then_stmts = p[2]
         else_stmts = p[3]
-        if eec(condition):
-            blockEvaluate(then_stmts)
+        if eec(condition, env):
+            ret = blockEvaluate(then_stmts, env)
+            if ret != None:
+                return ret
         else:
-            blockEvaluate(else_stmts)
+            ret = blockEvaluate(else_stmts, env)
+            if ret != None:
+                return ret
     elif stype == 'IfElifElse':
         condition = p[1]
         then_stmts = p[2]
         elif_stmts = p[3]
         else_stmts = p[4]
-        if eec(condition):
-            blockEvaluate(then_stmts)
+        if eec(condition, env):
+            ret = blockEvaluate(then_stmts, env)
+            if ret != None:
+                return ret
         else:
             esTrue = False
             es_then = None
             for es in elif_stmts:
                 es_condition = es[0]
                 es_then = es[1]
-                if eec(es_condition):
+                if eec(es_condition, env):
                     esTrue = True
                     break
             if esTrue and es_then != None:
-                blockEvaluate(es_then)
+                ret = blockEvaluate(es_then, env)
+                if ret != None:
+                    return ret
             else:
-                blockEvaluate(else_stmts)
+                ret = blockEvaluate(else_stmts, env)
+                if ret != None:
+                    return ret
     elif stype == 'For':
         countervar = p[1]
-        if not countervar in globalenv:
+        old_counterval = envLookup(env, countervar)
+        if old_counterval == None:
             raise NameError(f"Error: No such variable \'{countervar}\' exists.") 
-        start = eeb(p[2]) # must be numerical expression
-        end = eeb(p[3]) # evaluating numerical expressions
+        start = eeb(p[2], env) # must be numerical expression
+        end = eeb(p[3], env) # evaluating numerical expressions
         do_stmts = p[4]
         step = p[5]
         if start > end:
@@ -661,28 +723,33 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         if start > end and step > 0:
             raise RuntimeError("Error: Wrong step given.")
         
-        old_counterval = globalenv[countervar]
         for i in range(start, end+1, step):
-            globalenv[countervar] = i
-            blockEvaluate(do_stmts)
+            envUpdate(env, countervar, i)
+            ret = blockEvaluate(do_stmts, env)
+            if ret != None:
+                return ret
             if isBroken:
                 break
         isBroken = False # reset break
-        globalenv[countervar] = old_counterval
-
+        envUpdate(env, countervar, old_counterval)
+        
     elif stype == 'DoWhile':
         do_stmts = p[1]
         condition = p[2]
-        blockEvaluate(do_stmts) # first time the block is just executed
-        while eec(condition): # condition is necessary then onwards
+        ret = blockEvaluate(do_stmts, env) # first time the block is just executed
+        if ret != None:
+            return ret
+        while eec(condition, env): # condition is necessary then onwards
             if isBroken:
                 break
-            blockEvaluate(do_stmts)
+            ret = blockEvaluate(do_stmts, env)
+            if ret != None:
+                return ret
         isBroken = False
     elif stype == 'Print':
         printList = p[1]
         for element in printList:
-            result = expEvaluate(element)
+            result = expEvaluate(element, env)
             if type(result) == bool:
                 if result == True:
                     result = 'sach'
@@ -691,11 +758,16 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
             print(result, end=" ")
         print()  
     elif stype == 'FCall':
-        expEvaluate(p)
+        functionCall(p, env)
         # nothing is returned in the simple void stmt function call
     elif stype == 'FReturn':
-        returnVal = expEvaluate(p[1])
-        return returnVal
+        #print(colored(f"Inside a return statment with exp {p}","green"))
+        returnVal = expEvaluate(p[1], env)
+        #print(colored(f"Returned value: {returnVal}","red"))
+        #quit()
+        if returnVal != None:
+            return returnVal
+
     elif stype == 'Func':
         func = p[1]
         fargs = p[2]
@@ -705,26 +777,27 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         
         # evaluate fargs values further
         for i in range(len(fargs)):
-            fargs[i] = (fargs[i][0], expEvaluate(fargs[i][1]))
-            
-        funcdef[func] = [fargs, fstmts] # default values of args, fargs must be resolved further
+            fargs[i] = (fargs[i][0], expEvaluate(fargs[i][1], env))
 
+        funcdef[func] = [fargs, fstmts] # default values of args, fargs must be resolved further
     elif stype == 'ListF':
         listvar = p[2]
-        if listvar in globalenv and type(globalenv[listvar]) == list:
+        val = envLookup(env, listvar)
+        if val != None and type(val) == list:
             ftype = p[1]
-            e1 = eeb(p[3]) # evaluate expression, error handling
-            vlist = globalenv[listvar]
+            e1 = eeb(p[3], env) # evaluate expression, error handling
+            vlist = val
             if ftype == 'Pop':
                 if e1 == 0: # remove head of list
-                    del globalenv[listvar][0]
+                    del val[0]
                 elif e1 == 1: # remove tail of list
-                    globalenv[listvar].pop()
+                    val.pop()
             elif ftype == 'Push': #append
-                globalenv[listvar].append(e1)
+                val.append(e1)
             elif ftype == 'Slice':
-                e2 = eeb(p[4])
-                globalenv[listvar] = vlist[e1:e2+1]
+                e2 = eeb(p[4],env)
+                val = vlist[e1:e2+1]
+            envUpdate(env, listvar, val)
         else:
             raise NameError("List error.")
     elif stype == 'SCreate':
@@ -739,7 +812,7 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
             varVal = sarg[1]
             if varName in structdef[structname]:
                 raise KeyError(f"Error: Duplicate variable in stuct definition.") 
-            structdef[structname][varName] = expEvaluate(varVal) # varVal may be None here.
+            structdef[structname][varName] = expEvaluate(varVal, env) # varVal may be None here.
     
     elif stype == 'SMade':
         structname = p[1]
@@ -747,30 +820,59 @@ def stmtEvaluate(p): # p is the parsed tree / program, evalStmts
         if not structname in structdef:
             raise NameError(f"Error: No struct of that name is defined.")
         
-        if varName in globalenv:
+        val = envLookup(env, varName)
+        if val != None:
             raise KeyError(f"Error: This variable already exists.") 
         
-        globalenv[varName] = structdef[structname]
+        env[1][varName] = structdef[structname]
     
     elif stype == 'SVAssign':
         structObj = p[1]
         varName = p[2]
         varVal = p[3]
-        if not structObj in globalenv:
+        sVal = envLookup(env, structObj)
+        if sVal == None:
             raise NameError(f"Error: No such variable \'{structObj}\' exists.") 
         
-        if not varName in globalenv[structObj]:
+        if not varName in sVal:
             raise NameError(f"Error: No such variable \'{varName}\' exists inside that struct.") 
         
-        globalenv[structObj][varName] = expEvaluate(varVal)
-    else:       
-        if p[1] in globalenv:
-            return globalenv[p[1]]
-        else:    
-            return p[1]
+        sVal[varName] = expEvaluate(varVal, env) # no need to envUpdate, since this points to same dict
     
     #print("GLOBAL ENV:",globalenv)    
-    
+
+def printWithSyntaxHighlights(userin, colorstr):
+    proglines = userin.split('\n')
+    progCIlist = []
+    for line in proglines:
+        wordlist = line.split(' ')
+        kwlist = []
+        for word in wordlist:
+            for resword in reserved:
+                if resword in word and line[0] != "~":
+                    kw = [line.index(resword), line.index(resword)+len(resword)-1]
+                    kwlist.append(kw)
+        
+        colorIndexes = []
+        for rang in kwlist:
+            for i in range(rang[0],rang[1]+1):
+                if i not in colorIndexes:
+                    colorIndexes.append(i)
+        progCIlist.append(colorIndexes)
+
+    i = 0
+    for line in proglines:
+        j = 0
+        for char in line:
+            if j in progCIlist[i]:
+                print(colored(char,colorstr), end= "")
+            else:
+                print(char, end="")
+            j += 1
+        print()
+        i+=1
+
+
 while True:
     break
     userin = input("{YAPL_UZ} ")
@@ -783,7 +885,7 @@ while True:
         print(e)
 
 while True:
-    globalenv.clear() #refresh state
+    globalenv = (None, {}) #refresh state
     structdef.clear()
     funcdef.clear()
     fileHandler = open(sys.argv[1],"r")
@@ -797,7 +899,7 @@ while True:
     if not uzparsed:
         continue
     
-    print(userin)
+    printWithSyntaxHighlights(userin, "yellow")
     print("=========================================\n{OUTPUT}")
     try:
         runProgram(('Program',uzparsed))
