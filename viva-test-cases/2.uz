@@ -8,5 +8,4 @@ dekhao(a);
 a.push(2);
 a.push(9);
 dekhao(a);
-a.slice(0,1);
-dekhao(a);
+dekhao(a.slice(0,1));

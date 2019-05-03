@@ -1,0 +1,5 @@
+banao a = "initial";
+banao b=1, c=2;
+banao d = sach;
+banao e;
+banao f = "short";

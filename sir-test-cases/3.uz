@@ -1,0 +1,17 @@
+kaam plus(a,b)
+{
+	bhejo(a+b);	
+};
+
+kaam plusPlus(a,b,c){
+	bhejo(a+b+c);	
+};
+
+kaam main(){
+	banao res = plus(1,2);
+	dekhao("1+2 =",res);
+	res = plusPlus(1,2,3);
+	dekhao("1+2+3 =", res);
+};
+
+karwao main();

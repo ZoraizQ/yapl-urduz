@@ -1,0 +1,6 @@
+banao a = 1
+banao b = "abc";
+dekhao(a);
+dekhao(b);
+
+dekhao(5+((7+9)+3*4));

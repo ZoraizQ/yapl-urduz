@@ -1,0 +1,6 @@
+daba temp_name|a|;
+
+banao temp_name a_struct;
+a_struct.a = 5;
+dekhao(a_struct.a);
+

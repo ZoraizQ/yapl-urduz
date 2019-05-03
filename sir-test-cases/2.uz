@@ -1,0 +1,16 @@
+banao i = 1;
+agar (++i) >= 2 phir
+	{
+	banao j = 0;
+	challo j = 3 se 0 tak
+	{
+		dekhao(j);
+		agar i > 4 phir
+		{
+			rukko;
+		};
+	};
+}
+warna phir{
+	dekhao("tough luck" ); ~print in one line	
+};

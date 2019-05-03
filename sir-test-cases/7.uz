@@ -1,0 +1,4 @@
+banao temp = [1,2,3,4,5,6];
+banao temp2;
+temp2 = temp.slice(0,2);
+dekhao(temp2);

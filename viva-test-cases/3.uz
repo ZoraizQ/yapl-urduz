@@ -1,0 +1,7 @@
+banao i = 10;
+agar (++i == 11) phir{
+	dekhao(i);	
+}
+warna phir{
+	dekhao("none");
+};

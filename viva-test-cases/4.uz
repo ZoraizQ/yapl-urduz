@@ -1,0 +1,8 @@
+banao a;
+challo a = 0 se 9 tak{
+	dekhao(a);
+	banao j;
+	challo j = 0 se 2 tak{
+		dekhao(j);
+	}; 	
+};

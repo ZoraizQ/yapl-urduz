@@ -1,0 +1,10 @@
+banao it = 0;
+banao count = 0;
+karo{
+	it++;
+	dekhao(it);
+	karo{
+		count++;
+		dekhao(count);
+	}jabtak(count < 5);
+}jabtak(it < 2);

@@ -52,12 +52,20 @@ def p_line_stmt(p): # non-terminal, starting
     line : stmt SEMICOL
     """
     p[0] = ('Stmt',p[1])
-    #print(p.lineno(2))
 
-def p_uz_stmt_error(p):
-    """uz : error SEMICOL
+def p_line_stmt_errror(p): # non-terminal, starting
     """
-    print("Syntax error in uz statement. Bad statement")
+    line : error SEMICOL
+    """
+    print ("Ghalat expression ka istamaal.")
+    quit()
+
+def p_line_semicol_errror(p): # non-terminal, starting
+    """
+    line : stmt error
+    """
+    print ("; reh gaya hai.")
+    quit()
     
 def p_uz_empty(p):
     """
@@ -68,20 +76,18 @@ def p_uz_empty(p):
 def p_stmt_block(p): 
     """ stmtblock : LBRACE stmtS RBRACE"""
     p[0] = ('Block', p[2])
-    ''' stmtblock : LBRACE new_scope stmtS RBRACE
-    pop_scope()        # Return to previous scope'''
-'''
-def p_new_scope(p):
-    "new_scope :"
-    # Create a new scope for local variables
-    s = new_scope()
-    push_scope(s)
-    ...
-'''
 
-def p_stmt_block_error(p):
+def p_stmt_block_lbrack_error(p): 
+    """ stmtblock : error stmtS RBRACE"""
+    print("{ bracket missing hai.")
+
+def p_stmt_block_rbrack_error(p): 
+    """ stmtblock : LBRACE stmtS error"""
+    print("} bracket missing hai.")
+
+def p_stmt_block_stmtS_error(p): 
     """ stmtblock : LBRACE error RBRACE"""
-    p[0] = "BAD STMTS IN BLOCK"
+    print("StmtS ka error iss block mai.")
 
 def p_stmtS(p):
     """
@@ -91,9 +97,10 @@ def p_stmtS(p):
 
 def p_stmtS_error(p):
     """
-    stmtS : error SEMICOL stmtS
+    stmtS : stmt error stmtS
     """
-    p[0] = "BAD STMT IN STMTS"
+    print ("; reh gaya hai.")
+    quit()
 
 def p_stmtS_empty(p):
     """
@@ -112,7 +119,7 @@ def p_optargs(p):
     p[0] = p[1]
 
 def p_optargs_empty(p): # can go to empty as well
-    """optargs :"""
+    """optargs : """
     p[0] = []
 
 def p_args(p):
@@ -123,6 +130,20 @@ def p_args(p):
     else:
         p[0] = [p[1]] + p[3]
 
+def p_exp_not(p):
+    """exp : NOT exp"""
+    p[0] = ('Not', p[2])
+
+def p_exp_leftincdec(p):
+    """
+    exp : DEC exp
+        | INC exp
+    """
+    if p[1] == '--':
+        p[0] = ('Dec', p[2])
+    elif p[1] == '++':
+        p[0] = ('Inc', p[2])
+
 def p_exp_bin(p):
     """ 
     exp : exp PLUS exp
@@ -132,6 +153,12 @@ def p_exp_bin(p):
         | exp POWER exp
         | exp MODULUS exp
     """
+    L = p[1][0]
+    R = p[3][0]
+    blacklist = ['Char','Str','Bool','CompareEXP','Not']
+    if L in blacklist or R in blacklist:
+        print(f"Incorrect binary expression operands in line {p.lineno(0)+1}.")
+        quit()
     p[0] = ('BinaryEXP', p[2], p[1], p[3])
 
 def p_exp_compare(p):
@@ -155,21 +182,46 @@ def p_exp_name(p):
 #fun(x), usage may be like y = fun(x);
 def p_exp_fcall(p): 
     """exp : NAME LPAREN optargs RPAREN"""
-    p[0] = ("FCall",p[1],p[3]) # optsargs may be empty (p[2])
+    p[0] = ("FCall",p[1],p[3]) # optsargs may be empty (p[3])
 
 # bullao fun(x);
 # note, stmt calls is different from exp call, but both trigger same function expression
 def p_stmt_fcall(p): 
     """stmt : CALL NAME LPAREN optargs RPAREN"""
-    p[0] = ("FCall",p[2],p[4]) # optsargs may be empty (p[2])
+    p[0] = ("FCall",p[2],p[4]) # optsargs may be empty (p[4])
 
 def p_stmt_fret(p): 
     """stmt : RETURN exp"""
     p[0] = ("FReturn",p[2])
 
 def p_stmt_funcdef(p): 
-    """stmt : FUNCTION NAME LPAREN structargs RPAREN stmtblock"""
+    """stmt : FUNCTION NAME LPAREN funcargs RPAREN stmtblock"""
     p[0] = ("Func",p[2],p[4],p[6]) # structargs used because some parameters can have None value, and some pre-defined
+
+def p_funcargs(p):
+    """funcargs : funcexp COMMA funcargs
+                | funcexp"""
+    if len(p) < 3: # check
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
+
+def p_funcargs_empty(p):
+    """funcargs : """
+    p[0] = []
+
+def p_funcexp(p):
+    """funcexp : NAME
+               | NAME EQUAL exp"""
+    if len(p) == 2:
+        p[0] = (p[1], None) # a (default value is 0)
+    else:   
+        p[0] = (p[1], p[3]) # a = 1
+
+def p_exp_list(p):
+    """exp : list"""
+    p[0] = p[1]
+
 def p_list(p):
     """list : LBRACK optargs RBRACK"""
     p[0] = p[2]
@@ -182,13 +234,13 @@ def p_stmt_listpush(p):
     """stmt : NAME DOT PUSH LPAREN exp RPAREN"""
     p[0] = ('ListF', 'Push', p[1], p[5])
 
-def p_stmt_listindex(p):
+def p_exp_listindex(p):
     """exp : NAME DOT INDEX LPAREN exp RPAREN"""
     p[0] = ('GetIndex', p[1], p[5])
 
-def p_stmt_listslice(p):
-    """stmt : NAME DOT SLICE LPAREN exp COMMA exp RPAREN"""
-    p[0] = ('ListF', 'Slice', p[1], p[5], p[7])
+def p_exp_listslice(p):
+    """exp : NAME DOT SLICE LPAREN exp COMMA exp RPAREN"""
+    p[0] = ('Slice', p[1], p[5], p[7])
 
 # do not allow creation of structs inside functions, these definitions must be global, structdef is global too
 def p_stmt_structcreate(p):
@@ -207,7 +259,7 @@ def p_structexp(p):
     """structexp : NAME
                  | NAME EQUAL exp"""
     if len(p) == 2:
-        p[0] = (p[1], None) # a (default value is None)
+        p[0] = (p[1], None) # a (default value is 0)
     else:   
         p[0] = (p[1], p[3]) # a = 1
 
@@ -240,16 +292,6 @@ def p_exp_num(p): # handles unary minus, minusminus, plusplus
     else:
         p[0] = ('Num', p[1])    
 
-def p_exp_leftincdec(p):
-    """
-    exp : DEC exp
-        | INC exp
-    """
-    if p[1] == '--':
-        p[0] = ('Dec', p[2])
-    elif p[1] == '++':
-        p[0] = ('Inc', p[2])
-
 def p_stmt_rightincdec(p):
     """
     stmt : exp DEC
@@ -260,10 +302,6 @@ def p_stmt_rightincdec(p):
     elif p[2] == '++':
         p[0] = ('IncR', p[1 ])
     
-def p_exp_not(p):
-    """exp : NOT exp"""
-    p[0] = ('Not', p[2])
-
 def p_exp_boolean(p):
     """
     exp : TRUE
@@ -286,19 +324,24 @@ def p_exp_group(p):
     """exp : LPAREN exp RPAREN"""
     p[0] = ('Group', p[2])
 
+def p_exp_error(p):
+    """exp : error"""
+    print("Ghalat expression mila hai.")
+    quit()
+
 # banao a, or banao a = 3 (initialization and creation of variables)
 def p_makevar(p):
-    """stmt : MAKE NAME"""
+    """stmt : MAKE structargs"""
     p[0] = ('Made', p[2]) 
-
-def p_initvar(p):
-    """stmt : MAKE NAME EQUAL exp
-            | MAKE NAME EQUAL list"""
-    p[0] = ('Made', ('=',p[2],p[4])) 
 
 def p_assignment(p):
     """stmt : NAME EQUAL exp"""
     p[0] = ('=',p[1],p[3])
+
+def p_assignment_error(p):
+    """stmt : NAME EQUAL error"""
+    print("Ghalat expression mila hai.")
+    quit()
 
 def p_if(p):
     """
@@ -369,11 +412,15 @@ def p_stmt_print(p):
     """stmt : PRINT LPAREN optargs RPAREN"""
     p[0] = ('Print', p[3])
 
+'''
 def p_error(p):
-    print("Syntax error.")
+    if p == None:
+        print("None type parse tree p. A line is missing a ;") # causes problems for the next line
+        quit()
+    print(f"Syntax error in line {p.lineno}.")
     quit()
     return
-
+'''
 parser = yacc.yacc() # start parsing, yacc object created
 isBroken = False
 globalenv = (None, {}) # parent == None for globalenv, and empty initially
@@ -388,11 +435,8 @@ def eeb(e, env): #evaluate expression binary
         return eec(e, env)
     elif e[0] == 'FCall':
         retVal = functionCall(e, env)
-        #quit()
-        #print(colored(f"Returned fcall: {retVal}","red"))
         if retVal != None:
             return retVal
-
     elif e[0] == 'Dec':
         return eeb(e[1], env) - 1
     elif e[0] == 'Inc':
@@ -429,7 +473,7 @@ def eec(e, env): # evaluate expression comparison
     #print(f"CT in eec: {e}")
     operator = e[1]
     if e[0] == 'Group':
-        return eec(e[1], env)
+        return expEvaluate(e[1], env)
     elif e[0] == 'BinaryEXP':
         return eeb(e, env)
     elif operator == '<':
@@ -466,6 +510,10 @@ def eec(e, env): # evaluate expression comparison
         if varVal == None:
             raise NameError(f"Error: No such variable \'{e[1]}\' exists.")
         return varVal
+    elif e[0] == 'Dec':
+        return eec(e[1], env) - 1
+    elif e[0] == 'Inc':
+        return eec(e[1], env) + 1
     else:
         boolres = e[1]
 
@@ -473,31 +521,26 @@ def eec(e, env): # evaluate expression comparison
 
 
 def varCreate(p, env): # variable will be created in the environment where varCreate is called
+    #print(p)
     #print("VarCreate",env)
-    if type(p[1]) == tuple or type(p[1]) == list: # assignment tuple possible
-        # initialization with creation
-        varname = p[1][1]
-        if varname in env:
-            raise KeyError(f"Error: A variable by that name already exists.")
-        value = p[1][2]
-        if type(value) == list:
-            varlist = []
-            for element in value:
-                varlist.append(element[1]) # assuming not list inside, only single var
-            env[1][varname] = varlist
-        else:
-            value = expEvaluate(p[1][2], env)
-            #print("Var",varname, value)
-            #print("Current tree in varCreate", p, "Value",value)
-            # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
-            env[1][varname] = value
+    # initialization with creation
+    varname = p[0]
+    if varname in env:
+        raise KeyError(f"Error: A variable by that name already exists.")
+    value = p[1]
+    if type(value) == list:
+        varlist = []
+        for element in value:
+            varlist.append(element[1]) # assuming not list inside, only single var
+        env[1][varname] = varlist
     else:
-        # only creation, default value None assigned
-        varname = p[1]
-        if varname in env:
-            raise KeyError(f"Error: A variable by that name already exists.")
-        env[1][varname] = 0
+        value = expEvaluate(p[1], env)
+        #print("Var",varname, value)
+        #print("Current tree in varCreate", p, "Value",value)
+        # where p[1][1] will be the NAME (LHS), p[1][2] the expression to be evaluated (RHS)
+        env[1][varname] = value
 
+    #print(env)
 
 def blockEvaluate(p, env): # p[0] == 'Block'
     global isBroken
@@ -564,7 +607,11 @@ def envLookup(env, varName):
     env_parent = env[0]
     env_dict = env[1]
     if varName in env_dict:
-        return env_dict[varName]
+        #print('found',varName)
+        if env_dict[varName] == None:
+            return 0;
+        else:
+            return env_dict[varName]
     elif env_parent == None:
         return None
     else:
@@ -607,6 +654,15 @@ def expEvaluate(e, env):
                 return val[index]
             except:
                 raise NameError("Error: List index out of range.") ###   
+        else:
+            raise NameError("Error: List error.")
+    elif etype == 'Slice':
+        listvar = e[1]
+        val = envLookup(env, listvar)
+        if val != None and type(val) == list:
+            e1 = eeb(e[2], env) # evaluate expression, error handling
+            e2 = eeb(e[3], env)
+            return val[e1:e2+1]
         else:
             raise NameError("Error: List error.")
     elif etype == 'SVGet':
@@ -654,7 +710,8 @@ def stmtEvaluate(p, env): # p is the parsed tree / program, evalStmts
             raise NameError(f"Error: No such variable \'{p[1]}\' exists.")
         envUpdate(env, varname, varVal) # make an entry for the variable in the globalenv dictionary, where the key is the NAME and the value is the assigned expression
     elif stype == 'Made': # creation of a variable
-        varCreate(p, env)
+        for varg in p[1]:
+            varCreate(varg, env)
     elif stype == 'If':    
         condition = p[1]
         then_stmts = p[2]
@@ -786,7 +843,6 @@ def stmtEvaluate(p, env): # p is the parsed tree / program, evalStmts
         if val != None and type(val) == list:
             ftype = p[1]
             e1 = eeb(p[3], env) # evaluate expression, error handling
-            vlist = val
             if ftype == 'Pop':
                 if e1 == 0: # remove head of list
                     del val[0]
@@ -794,9 +850,6 @@ def stmtEvaluate(p, env): # p is the parsed tree / program, evalStmts
                     val.pop()
             elif ftype == 'Push': #append
                 val.append(e1)
-            elif ftype == 'Slice':
-                e2 = eeb(p[4],env)
-                val = vlist[e1:e2+1]
             envUpdate(env, listvar, val)
         else:
             raise NameError("List error.")

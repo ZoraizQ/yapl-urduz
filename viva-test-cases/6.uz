@@ -1,0 +1,11 @@
+kaam fib(n){
+	agar ((n==1) ya (n==0)) phir{
+		bhejo n;
+	}	
+	warna phir{
+		bhejo (fib(n-1) + fib(n-2));
+	};
+};
+
+
+dekhao(fib(9));

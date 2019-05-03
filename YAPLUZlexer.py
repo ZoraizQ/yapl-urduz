@@ -6,7 +6,7 @@ import re
 #Reserved keywords for YAPL_UZ
 reserved = { # single rule, special
     'agar' : 'IF',
-    'lekinagar' : 'ELIF',
+    'warnaagar' : 'ELIF',
     'warna' : 'ELSE',
     'phir':'THEN',
     'challo':'FOR',
@@ -20,7 +20,7 @@ reserved = { # single rule, special
     'kaam':'FUNCTION',
     'aur':'AND', # can be caps too
     'ya':'OR',
-    'na':'NOT',
+    'naa':'NOT',
     'karwao':'CALL',
     'sach':'TRUE',
     'ghalat':'FALSE',
@@ -95,8 +95,7 @@ t_DEC = r'\-\-'
 t_COMMA = r'\,'
 t_SEMICOL = r'\;'
 t_DOT = r'\.'
-t_ignore = r' ' # ignore spaces, better lexing performance, special case
-# allow \' character here for urdu?
+t_ignore = ' \t\r\n\f\v' # ignore spaces, better lexing performance, special case
 # any number of characters, upper or lower case any position, atleast 1 length
 #first character must be alphabet or _, rest can be alphanumeric or have _, adding no character means concatenation
 
@@ -111,24 +110,11 @@ def t_MULTICOMMENT(t): # needs fix
  pass
 
 # Define a rule so we can track line numbers
-def t_NEWL(t):
- r'\n+'
+def t_lineno(t):
+ r'\n'
  t.lexer.lineno += len(t.value) # number of \n characters lexed (length) in a line increments the lineno attribute of the t.lexer
 # positional info recorded in lexpos attribute, we can get column info from this
 
-# Handle EOF, comment
-'''
-def t_eof(t):
-more = raw_input('... ')
-if more:
- self.lexer.input(more)
- return self.lexer.token()
-return None
-'''
-'''
-https://dev.to/geocine/what-are-your-favorite-programming-language-syntax-features-1emm
-optional chaining operator
-'''
 def t_STRING(t):
     r'\"[^"]*\"'
     t.value = t.value[1:-1] # truncate "" marks
@@ -158,9 +144,9 @@ def t_INT(t): # parameter t is the token
     return t
 
 def t_error(t): # error while lexing
-    print(f"Lexer Error 0: Illegal character entered = {t.value[0]}")
+    print("[Lexer Error] Line",t.lineno)
+    print(f"Illegal character enter hua hai: {t.value}")
     t.lexer.skip(1) # skips illegal character
-
 
 # lexer build
 uzlexer = lex.lex()

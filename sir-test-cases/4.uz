@@ -1,9 +1,10 @@
 kaam fun(a,b){
-agar b==0 phir{
-bhejo 0;
+	agar b==0 phir{
+	bhejo 0;
 };
+
 agar ((b % 2) == 0) phir{
-bhejo fun(a+a, b/2);
+	bhejo fun(a+a, b/2);
 };
 
 bhejo fun(a+a, b/2) + a;
