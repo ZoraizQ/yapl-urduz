@@ -1,7 +1,7 @@
 # YAPL UrduZ
 YAPL based on the Urdu language using principles from the Theory of Automata.
 The interpreter features *syntax highlighting* for the terminal as well and a wide variety of test cases are provided.
-!(Syntax Highlighting)[syntax-highlighting.png]
+![Syntax Highlighting](syntax-highlighting.png)
 
 ## Language features:
 - Standard output
