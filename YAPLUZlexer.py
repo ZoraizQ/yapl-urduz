@@ -101,18 +101,18 @@ t_ignore = ' \t\r\n\f\v' # ignore spaces, better lexing performance, special cas
 
 # begin from ~
 def t_COMMENT(t):
- r'\~.*' # . represents any character
- pass
- # discarding tokens, since nothing is returned
+    r'\~.*' # . represents any character
+    pass
+    # discarding tokens, since nothing is returned
 
 def t_MULTICOMMENT(t): # needs fix
- r'\~\~\~.*\~\~\~' # . represents any character
- pass
+    r'\~\~\~.*\~\~\~' # . represents any character
+    pass
 
 # Define a rule so we can track line numbers
 def t_lineno(t):
- r'\n'
- t.lexer.lineno += len(t.value) # number of \n characters lexed (length) in a line increments the lineno attribute of the t.lexer
+    r'\n'
+    t.lexer.lineno += len(t.value) # number of \n characters lexed (length) in a line increments the lineno attribute of the t.lexer
 # positional info recorded in lexpos attribute, we can get column info from this
 
 def t_STRING(t):

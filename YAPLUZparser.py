@@ -9,18 +9,6 @@ from termcolor import colored
 
 tokens = YAPLUZlexer.tokens
 reserved = YAPLUZlexer.reserved
-'''
-banao myNum = 0
-@ strong comment?
-~ single-line comment = print numbers 1 to 10
-~~~
-multiline comment
-~~~
-karo {
-myNum += 1
-dekhao(myNum)
-} jabtak (myNum != 100) aur jabtak (myNum !=5)
-'''
 
 #to resolve ambiguity, individual tokens assigned a precedence level and associativity. 
 # tokens ordered from lowest to highest precedence, rightmost terminal judged

@@ -1,5 +1,0 @@
-banao y = 1;
-
-agar y == 1 phir{
-dekhao(y+1);
-};
